@@ -5,6 +5,8 @@ import RPi.GPIO as GPIO
 import time
 import Freenove_DHT as DHT
 DHTPin = 11
+FanPin = 22  #just a pin for the fan
+FanStatusIndicator = "Off"  #Indicator for fan
 
 app = Dash(external_stylesheets=[dbc.themes.SUPERHERO])
 nav_menu= dbc.NavbarSimple(
@@ -43,6 +45,10 @@ app.layout = html.Div([nav_menu,
         units="C",
         color="red",
     ),
+    daq.Indicator(  #indicator for fan, has like a light that should switch color if true/false and label
+        id='my-fan-1',
+        label="Fan Status: " + FanStatusIndicator,
+    ),
     dcc.Interval(
         id = 'humid-update',
         disabled=False,
@@ -55,7 +61,12 @@ app.layout = html.Div([nav_menu,
         interval = 1*5000,  #lower than 5000 for temperature wouldn't show the temp on the
         n_intervals = 0
     ),
-    
+    dcc.Interval(   # interval for fan to update it regularly (not tested)
+        id = 'fan-update',
+        disabled=False,
+        interval = 1*5000,  #not sure of the value for interval for fan if needed so just copy pasted same batch of code
+        n_intervals = 0
+    ),
 ])
 
 @app.callback(Output('my-gauge-1', 'value'), Input('humid-update', 'n_intervals'))
@@ -83,6 +94,19 @@ def update_output(value):
         time.sleep(2)
         print("Temperature : %.2f \n"%(dht.temperature)) 
         return dht.temperature
+
+@app.callback(Output('my-fan-1', 'value'), Input('fan-update', 'n_intervals'))      #  Fan here (CODE NOT TESTED), uses update_fanstatus method to say on/off, returns true if output is high which means the indicator will switch colors, true/false will make the indicator have different colors
+def update_output(value):
+    update_fanstatus(FanStatusIndicator)
+    return True if GPIO.input(FanPin) else False
+
+
+def update_fanstatus(FanStatusIndicator):  # just change text on indicator if gpio high or not... not tested
+    if GPIO.input(FanPin):
+        FanStatusIndicator = "On"
+    else:
+        FanStatusIndicator = "Off"
+    return FanStatusIndicator
     
 if __name__ == '__main__':
     app.run_server(debug=True)

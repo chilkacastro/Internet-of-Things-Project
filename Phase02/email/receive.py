@@ -45,8 +45,9 @@ while True:
                             replybody = str(mail_content.split('\n', 1)[0])
                             print(f'IF THIS IS NOT YES WHEN YOU REPLY TO THE ORIGINAL EMAIL ITS BAD: {replybody}')
                             #WHY IS THE IF NOT WORKING!!!! STRAIGHT BUGGGGIIN
-                            if replybody == "YES":
+                            if (replybody.upper()).strip.__eq__("YES"):
                                 activateFan()
+                                print('entered if')
                             
                 else:
                     #This part gets called when the email is not a reply (left for testing)

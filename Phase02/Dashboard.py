@@ -47,7 +47,7 @@ app.layout = html.Div([nav_menu,
     ),
     daq.Indicator(  #indicator for fan, has like a light that should switch color if true/false and label
         id='my-fan-1',
-        label="Fan Status: " + FanStatusIndicator,
+        label="Fan Status: " + FanStatusIndicator
     ),
     dcc.Interval(
         id = 'humid-update',

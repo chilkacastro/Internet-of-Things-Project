@@ -2,6 +2,8 @@ from dash import Dash, html, dcc, Input, Output
 import dash_bootstrap_components as dbc
 import dash_daq as daq
 import RPi.GPIO as GPIO
+import base64
+from PIL import Image       # use and download PILLOW for it to work  https://pillow.readthedocs.io/en/stable/installation.html
 import time
 from time import sleep
 import Freenove_DHT as DHT
@@ -14,6 +16,13 @@ SERVER = 'outlook.office365.com'
 
 DHTPin = 40 #equivalent to GPIO21
 FanStatusIndicator = ""  #Indicator for fan
+FanImage = '' # set fan image name.
+
+
+image_path_fanon = 'assets/fanon.png'
+image_path_fanoff = 'assets/fanoff.jpg'
+
+path_result = ''
 
 GPIO.setmode(GPIO.BOARD)
 GPIO.setwarnings(False)
@@ -26,6 +35,34 @@ GPIO.setup(Motor2,GPIO.OUT)
 GPIO.setup(Motor3,GPIO.OUT)
 
 sendCount = 0
+
+pil_img = Image.open("assets/fanon.png")
+pil_img = Image.open("assets/fanoff.png")
+
+def b64_image(image_filename):
+    with open(image_filename, 'rb') as f:
+        image = f.read()
+    return 'data:image/png;base64,' + base64.b64encode(image).decode('utf-8')
+
+
+def update_fanstatus(FanStatusIndicator):  # WORKS MOVED UP!
+    if GPIO.input(Motor1) and not GPIO.input(Motor2) and GPIO.input(Motor3):
+        FanStatusIndicator = "On"
+    else:
+        FanStatusIndicator = "Off"
+    return FanStatusIndicator
+def update_fanimage(FanImage):  #changes indicator of fan image to change image if fan on/off
+    if FanStatusIndicator == "On":
+        FanImage = 'fanon.png'
+    else:
+        FanImage = 'fanoff.png'
+    return FanImage
+def update_fanimage_path(path_result):  # changes path of image to be displayed if fan on/off
+    if FanStatusIndicator == "On":
+        path_result = image_path_fanon
+    else:
+        path_result = image_path_fanoff
+    return path_result
 
 app = Dash(external_stylesheets=[dbc.themes.SUPERHERO])
 nav_menu= dbc.NavbarSimple(
@@ -52,7 +89,13 @@ app.layout = html.Div([nav_menu,
         units="C",
         color="red",
     ),
-   
+    html.H1('Fan Status'),
+    html.Img(src=path_result),                          # passing the direct file path which will be changed by method
+    html.Img(src=app.get_asset_url(FanImage)),    # set the asset url with the fan image propert
+   #html.Img(src=dash.get_asset_url('my-image.png'))    Or with newer Dash v2.2.0
+    html.Img(src=pil_img),                             # using the pillow image variable
+    html.Img(src=b64_image(path_result)# using base64 to encode and decode the image file, again using path result if fan on/off
+    ),               
     dcc.Interval(
         id = 'humid-update',
         disabled=False,
@@ -113,12 +156,8 @@ def sendEmail():
             server.login(sender_email, password)
             server.sendmail(sender_email, receiver_email, message) 
 
-def update_fanstatus(FanStatusIndicator):  # just change text on indicator if gpio high or not... not tested
-    if GPIO.input(Motor1) and not GPIO.input(Motor2) and GPIO.input(Motor3):
-        FanStatusIndicator = "On"
-    else:
-        FanStatusIndicator = "Off"
-    return FanStatusIndicator
+
+
 
 if __name__ == '__main__':
     app.run_server(debug=True)

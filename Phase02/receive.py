@@ -33,7 +33,8 @@ def activateFan():
     GPIO.output(Motor1,GPIO.HIGH)
     GPIO.output(Motor2,GPIO.LOW)
     GPIO.output(Motor3,GPIO.HIGH)
-    
+
+
 message = ''
 mail_content = ''
 replybody = ''
@@ -89,6 +90,7 @@ while True:
                     
 
 
+   
                     
 
 

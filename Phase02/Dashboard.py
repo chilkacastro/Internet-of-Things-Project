@@ -16,13 +16,13 @@ SERVER = 'outlook.office365.com'
 
 DHTPin = 40 #equivalent to GPIO21
 FanStatusIndicator = ""  #Indicator for fan
-FanImage = '' # set fan image name.
+#FanImage = '' # set fan image name.
 
 
 image_path_fanon = 'assets/fanon.png'
 image_path_fanoff = 'assets/fanoff.jpg'
 
-path_result = None
+#path_result = ''
 
 GPIO.setmode(GPIO.BOARD)
 GPIO.setwarnings(False)
@@ -39,31 +39,28 @@ sendCount = 0
 pil_img_fanon = Image.open("assets/fanon.png")
 pil_img_fanoff = Image.open("assets/fanoff.png")
 
-pil_img_result = None
+#pil_img_result = ''
 
 def b64_image(image_filename):
     with open(image_filename, 'rb') as f:
         image = f.read()
     return 'data:image/png;base64,' + base64.b64encode(image).decode('utf-8')
 
-def update_fanimage(FanImage):  #changes indicator of fan image to change image if fan on/off
+def update_fanimage():  #changes indicator of fan image to change image if fan on/off
     if FanStatusIndicator == "On":
-        FanImage = 'fanon.png'
+        return 'fanon.png'
     else:
-        FanImage = 'fanoff.png'
-    return FanImage
-def update_fanimage_path(path_result):  # changes path of image to be displayed if fan on/off
+        return 'fanoff.png'
+def update_fanimage_path():  # changes path of image to be displayed if fan on/off
     if FanStatusIndicator == "On":
-        path_result = image_path_fanon
+        return image_path_fanon
     else:
-        path_result = image_path_fanoff
-    return path_result
-def update_pilimage(pil_img_result):  # changes pil path of image to be displayed if fan on/off
+        return image_path_fanoff
+def update_pilimage():  # changes pil path of image to be displayed if fan on/off
     if FanStatusIndicator == "On":
-        pil_img_result = pil_img_fanon
+        return pil_img_fanon
     else:
-        pil_img_result = pil_img_fanoff
-    return pil_img_result
+        return pil_img_fanoff
 
 
 app = Dash(external_stylesheets=[dbc.themes.SUPERHERO])
@@ -92,12 +89,12 @@ app.layout = html.Div([nav_menu,
         color="red",
     ),
     html.H1('Fan Status'),
-    html.Img(src=path_result),                          # passing the direct file path which will be changed by method
-    html.Img(src=app.get_asset_url(FanImage)),    # set the asset url with the fan image propert
+    html.Img(src=update_fanimage_path()),                          # passing the direct file path which will be changed by method
+    html.Img(src=app.get_asset_url(update_fanimage())),    # set the asset url with the fan image propert
    #html.Img(src=dash.get_asset_url(FanImage))    Or with newer Dash v2.2.0
-    html.Img(src=pil_img_result),                             # using the pillow image variable
-    html.Img(src=b64_image(path_result)# using base64 to encode and decode the image file, again using path result if fan on/off
-    ),               
+    html.Img(src=update_pilimage()),                             # using the pillow image variable
+    html.Img(src=b64_image(update_fanimage_path())),  # using base64 to encode and decode the image file, again using path result if fan on/off),               
+    
     dcc.Interval(
         id = 'humid-update',
         disabled=False,

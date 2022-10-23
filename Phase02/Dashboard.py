@@ -22,7 +22,7 @@ FanImage = '' # set fan image name.
 image_path_fanon = 'assets/fanon.png'
 image_path_fanoff = 'assets/fanoff.jpg'
 
-path_result = ''
+path_result = None
 
 GPIO.setmode(GPIO.BOARD)
 GPIO.setwarnings(False)
@@ -36,15 +36,34 @@ GPIO.setup(Motor3,GPIO.OUT)
 
 sendCount = 0
 
-pil_img = Image.open("assets/fanon.png")
-pil_img = Image.open("assets/fanoff.png")
+pil_img_fanon = Image.open("assets/fanon.png")
+pil_img_fanoff = Image.open("assets/fanoff.png")
+
+pil_img_result = None
 
 def b64_image(image_filename):
     with open(image_filename, 'rb') as f:
         image = f.read()
     return 'data:image/png;base64,' + base64.b64encode(image).decode('utf-8')
 
-
+def update_fanimage(FanImage):  #changes indicator of fan image to change image if fan on/off
+    if FanStatusIndicator == "On":
+        FanImage = 'fanon.png'
+    else:
+        FanImage = 'fanoff.png'
+    return FanImage
+def update_fanimage_path(path_result):  # changes path of image to be displayed if fan on/off
+    if FanStatusIndicator == "On":
+        path_result = image_path_fanon
+    else:
+        path_result = image_path_fanoff
+    return path_result
+def update_pilimage(pil_img_result):  # changes pil path of image to be displayed if fan on/off
+    if FanStatusIndicator == "On":
+        pil_img_result = pil_img_fanon
+    else:
+        pil_img_result = pil_img_fanoff
+    return pil_img_result
 
 
 app = Dash(external_stylesheets=[dbc.themes.SUPERHERO])
@@ -76,7 +95,7 @@ app.layout = html.Div([nav_menu,
     html.Img(src=path_result),                          # passing the direct file path which will be changed by method
     html.Img(src=app.get_asset_url(FanImage)),    # set the asset url with the fan image propert
    #html.Img(src=dash.get_asset_url('my-image.png'))    Or with newer Dash v2.2.0
-    html.Img(src=pil_img),                             # using the pillow image variable
+    html.Img(src=pil_img_result),                             # using the pillow image variable
     html.Img(src=b64_image(path_result)# using base64 to encode and decode the image file, again using path result if fan on/off
     ),               
     dcc.Interval(
@@ -145,19 +164,6 @@ def update_fanstatus(FanStatusIndicator):  # WORKS AND TESTED.
     else:
         FanStatusIndicator = "Off"
     return FanStatusIndicator
-def update_fanimage(FanImage):  #changes indicator of fan image to change image if fan on/off
-    if FanStatusIndicator == "On":
-        FanImage = 'fanon.png'
-    else:
-        FanImage = 'fanoff.png'
-    return FanImage
-def update_fanimage_path(path_result):  # changes path of image to be displayed if fan on/off
-    if FanStatusIndicator == "On":
-        path_result = image_path_fanon
-    else:
-        path_result = image_path_fanoff
-    return path_result
-
 
 if __name__ == '__main__':
     app.run_server(debug=True)

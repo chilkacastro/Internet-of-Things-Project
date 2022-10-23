@@ -45,24 +45,7 @@ def b64_image(image_filename):
     return 'data:image/png;base64,' + base64.b64encode(image).decode('utf-8')
 
 
-def update_fanstatus(FanStatusIndicator):  # WORKS MOVED UP!
-    if GPIO.input(Motor1) and not GPIO.input(Motor2) and GPIO.input(Motor3):
-        FanStatusIndicator = "On"
-    else:
-        FanStatusIndicator = "Off"
-    return FanStatusIndicator
-def update_fanimage(FanImage):  #changes indicator of fan image to change image if fan on/off
-    if FanStatusIndicator == "On":
-        FanImage = 'fanon.png'
-    else:
-        FanImage = 'fanoff.png'
-    return FanImage
-def update_fanimage_path(path_result):  # changes path of image to be displayed if fan on/off
-    if FanStatusIndicator == "On":
-        path_result = image_path_fanon
-    else:
-        path_result = image_path_fanoff
-    return path_result
+
 
 app = Dash(external_stylesheets=[dbc.themes.SUPERHERO])
 nav_menu= dbc.NavbarSimple(
@@ -156,7 +139,24 @@ def sendEmail():
             server.login(sender_email, password)
             server.sendmail(sender_email, receiver_email, message) 
 
-
+def update_fanstatus(FanStatusIndicator):  # WORKS AND TESTED.
+    if GPIO.input(Motor1) and not GPIO.input(Motor2) and GPIO.input(Motor3):
+        FanStatusIndicator = "On"
+    else:
+        FanStatusIndicator = "Off"
+    return FanStatusIndicator
+def update_fanimage(FanImage):  #changes indicator of fan image to change image if fan on/off
+    if FanStatusIndicator == "On":
+        FanImage = 'fanon.png'
+    else:
+        FanImage = 'fanoff.png'
+    return FanImage
+def update_fanimage_path(path_result):  # changes path of image to be displayed if fan on/off
+    if FanStatusIndicator == "On":
+        path_result = image_path_fanon
+    else:
+        path_result = image_path_fanoff
+    return path_result
 
 
 if __name__ == '__main__':

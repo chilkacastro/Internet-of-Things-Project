@@ -39,6 +39,7 @@ sendCount = 0
 pil_img_fanon = Image.open("assets/fanon.png")
 pil_img_fanoff = Image.open("assets/fanoff.png")
 
+
 #pil_img_result = ''
 
 def b64_image(image_filename):
@@ -61,6 +62,8 @@ def update_pilimage():  # changes pil path of image to be displayed if fan on/of
         return pil_img_fanon
     else:
         return pil_img_fanoff
+
+# encoded_image = base64.b64encode(open(update_fanimage_path(), 'rb').read())  -- ALTERNATIVE CODE FOR IMAGE DISPLAY
 
 
 app = Dash(external_stylesheets=[dbc.themes.SUPERHERO])
@@ -95,6 +98,7 @@ app.layout = html.Div([nav_menu,
     html.Img(src=update_pilimage()),                             # using the pillow image variable
     html.Img(src=b64_image(update_fanimage_path())),  # using base64 to encode and decode the image file, again using path result if fan on/off),               
     
+    # html.Img(src='data:image/png;base64,{}'.format(encoded_image.decode()))   ## alternative code for image display, if this is used, remove the other code above it that starts with html.
     dcc.Interval(
         id = 'humid-update',
         disabled=False,

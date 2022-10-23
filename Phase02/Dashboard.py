@@ -20,7 +20,7 @@ FanStatusIndicator = ""  #Indicator for fan
 
 
 image_path_fanon = 'assets/fanon.png'
-image_path_fanoff = 'assets/fanoff.jpg'
+image_path_fanoff = 'assets/fanoff.png'
 
 #path_result = ''
 

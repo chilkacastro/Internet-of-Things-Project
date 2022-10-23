@@ -94,7 +94,7 @@ app.layout = html.Div([nav_menu,
     html.H1('Fan Status'),
     html.Img(src=path_result),                          # passing the direct file path which will be changed by method
     html.Img(src=app.get_asset_url(FanImage)),    # set the asset url with the fan image propert
-   #html.Img(src=dash.get_asset_url('my-image.png'))    Or with newer Dash v2.2.0
+   #html.Img(src=dash.get_asset_url(FanImage))    Or with newer Dash v2.2.0
     html.Img(src=pil_img_result),                             # using the pillow image variable
     html.Img(src=b64_image(path_result)# using base64 to encode and decode the image file, again using path result if fan on/off
     ),               

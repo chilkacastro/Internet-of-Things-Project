@@ -15,14 +15,6 @@ PASSWORD = 'iotpassword123'
 SERVER = 'outlook.office365.com'
 
 DHTPin = 40 #equivalent to GPIO21
-FanStatusIndicator = ""  #Indicator for fan
-#FanImage = '' # set fan image name.
-
-
-image_path_fanon = 'assets/fanon.png'
-image_path_fanoff = 'assets/fanoff.png'
-
-#path_result = ''
 
 GPIO.setmode(GPIO.BOARD)
 GPIO.setwarnings(False)
@@ -35,35 +27,6 @@ GPIO.setup(Motor2,GPIO.OUT)
 GPIO.setup(Motor3,GPIO.OUT)
 
 sendCount = 0
-
-pil_img_fanon = Image.open("assets/fanon.png")
-pil_img_fanoff = Image.open("assets/fanoff.png")
-
-
-#pil_img_result = ''
-
-def b64_image(image_filename):
-    with open(image_filename, 'rb') as f:
-        image = f.read()
-    return 'data:image/png;base64,' + base64.b64encode(image).decode('utf-8')
-
-def update_fanimage():  #changes indicator of fan image to change image if fan on/off
-    if FanStatusIndicator == "On":
-        return 'fanon.png'
-    else:
-        return 'fanoff.png'
-def update_fanimage_path():  # changes path of image to be displayed if fan on/off
-    if FanStatusIndicator == "On":
-        return image_path_fanon
-    else:
-        return image_path_fanoff
-def update_pilimage():  # changes pil path of image to be displayed if fan on/off
-    if FanStatusIndicator == "On":
-        return pil_img_fanon
-    else:
-        return pil_img_fanoff
-
-# encoded_image = base64.b64encode(open(update_fanimage_path(), 'rb').read())  -- ALTERNATIVE CODE FOR IMAGE DISPLAY
 
 
 app = Dash(external_stylesheets=[dbc.themes.SUPERHERO])
@@ -91,12 +54,10 @@ app.layout = html.Div([nav_menu,
         units="C",
         color="red",
     ),
-    html.H1('Fan Status'),
-    html.Img(src=update_fanimage_path()),                          # passing the direct file path which will be changed by method
-    html.Img(src=app.get_asset_url(update_fanimage())),    # set the asset url with the fan image propert
-   #html.Img(src=dash.get_asset_url(FanImage))    Or with newer Dash v2.2.0
-    html.Img(src=update_pilimage()),                             # using the pillow image variable
-    html.Img(src=b64_image(update_fanimage_path())),  # using base64 to encode and decode the image file, again using path result if fan on/off),               
+    daq.Indicator(
+        id='my-fan-1',
+        label="Fan Status",
+    ),         
     
     # html.Img(src='data:image/png;base64,{}'.format(encoded_image.decode()))   ## alternative code for image display, if this is used, remove the other code above it that starts with html.
     dcc.Interval(
@@ -109,6 +70,12 @@ app.layout = html.Div([nav_menu,
         id = 'temp-update',
         disabled=False,
         interval = 1*10000,   #lower than 5000 for temperature wouldn't show the temp on the terminal
+        n_intervals = 0
+    ),
+    dcc.Interval(
+        id = 'fan-update',
+        disabled=False,
+        interval = 1*8000,   #lower than 5000 for temperature wouldn't show the temp on the terminal
         n_intervals = 0
     ),
 ])
@@ -142,6 +109,7 @@ def update_output(value):
           
         return dht.temperature
 
+
 def sendEmail():
         port = 587  # For starttls
         smtp_server = "smtp-mail.outlook.com"
@@ -159,12 +127,18 @@ def sendEmail():
             server.login(sender_email, password)
             server.sendmail(sender_email, receiver_email, message) 
 
-def update_fanstatus(FanStatusIndicator):  # WORKS AND TESTED.
+def is_fan_on():  
     if GPIO.input(Motor1) and not GPIO.input(Motor2) and GPIO.input(Motor3):
-        FanStatusIndicator = "On"
+        return True
     else:
-        FanStatusIndicator = "Off"
-    return FanStatusIndicator
+        return False
+
+@app.callback(Output('my-fan-1', 'value'), Input('fan-update', 'n_intervals'))
+def update_output(value):
+    while (True):           # or remove while true?
+        fan_status_checker = is_fan_on()
+        return True if fan_status_checker else False
+        # return True if GPIO.input(Motor1) and not GPIO.input(Motor2) and GPIO.input(Motor3) else False
 
 if __name__ == '__main__':
     app.run_server(debug=True)

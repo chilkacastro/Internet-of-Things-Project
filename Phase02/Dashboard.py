@@ -22,9 +22,9 @@ Motor1 = 35 # Enable Pin
 Motor2 = 37 # Input Pin
 Motor3 = 33 # Input Pin
 
-GPIO.setup(Motor1,GPIO.OUT)
-GPIO.setup(Motor2,GPIO.OUT)
-GPIO.setup(Motor3,GPIO.OUT)
+GPIO.setup(Motor1,GPIO.IN)
+GPIO.setup(Motor2,GPIO.IN)
+GPIO.setup(Motor3,GPIO.IN)
 
 sendCount = 0
 

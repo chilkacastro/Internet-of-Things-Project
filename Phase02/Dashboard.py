@@ -135,7 +135,7 @@ def is_fan_on():
 
 @app.callback(Output('my-fan-1', 'value'), Input('fan-update', 'n_intervals'))
 def update_output(value):
-    while (True):           # or remove while true?
+    while(True):           # or remove while true?
         fan_status_checker = is_fan_on()
         return True if fan_status_checker else False
         # return True if GPIO.input(Motor1) and not GPIO.input(Motor2) and GPIO.input(Motor3) else False

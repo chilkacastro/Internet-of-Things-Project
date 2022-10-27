@@ -14,7 +14,7 @@ EMAIL = 'iotdashboard2022@outlook.com'
 PASSWORD = 'iotpassword123'
 
 SERVER = 'outlook.office365.com'
-
+temperature = 0
 DHTPin = 40 #equivalent to GPIO21
 fan_status_checker=False
 GPIO.setmode(GPIO.BOARD)
@@ -47,17 +47,21 @@ app.layout = html.Div([nav_menu,
             , width=4),
         
             dbc.Col(
-                daq.Thermometer(
-                id='my-thermometer-1',
-                min=-40,
-                max=50,
-                scale={'start': -40, 'interval': 5},
-                label="Temperature(Celcius)",
-                showCurrentValue=True,
-                units="C",
-                color="red")
-            , width=4),
-                       
+                dbc.Row(
+                    [
+                    daq.Thermometer(
+                    id='my-thermometer-1',
+                    min=-40,
+                    max=160,
+                    scale={'start': -40, 'interval': 25},
+                    label="Temperature(Celsius)",
+                    showCurrentValue=True,
+                    units="C",
+                    color="red"),
+                    html.Button('Fahrenheit', id='fahrenheit-button', n_clicks=0)
+                    ]
+                    )
+                 ,width=4),
             dbc.Col(
                 dbc.Row(
                     [
@@ -88,7 +92,7 @@ app.layout = html.Div([nav_menu,
         dcc.Interval(
             id = 'temp-update',
             disabled=False,
-            interval = 1*1800000,   #lower than 5000 for temperature wouldn't show the temp on the terminal
+            interval = 1*8000,   #lower than 5000 for temperature wouldn't show the temp on the terminal #1800000 equivalent to 30 mins
             n_intervals = 0
         ),
         dcc.Interval(
@@ -113,7 +117,7 @@ def update_output(value):
         print("Humidity : %.2f \t \n"%(dht.humidity))  # for testing on the terminal
         return dht.humidity
     
-@app.callback(Output('my-thermometer-1', 'value'), Input('temp-update', 'n_intervals'))
+@app.callback([Output('my-thermometer-1', 'value')], Input('temp-update', 'n_intervals'))
 def update_output(value):
     dht = DHT.DHT(DHTPin)   #create a DHT class object
     while(True):
@@ -123,6 +127,7 @@ def update_output(value):
                 break
             time.sleep(0.1)
         time.sleep(2)
+        temperature = dht.temperature
         print("Temperature : %.2f \n"%(dht.temperature))
         if (dht.temperature >= 24):
             sendEmail()
@@ -170,6 +175,12 @@ def update_h1(n):
     
     else:
         return "Status: Off",{'display':'none'}
+    
+@app.callback([Output('my-thermometer-1', 'value')] ,
+              [Input('temp-update', 'n_intervals'),
+              Input('fahrenheit-button', 'n_clicks')])
+def changeToFahrenheit(n_intervals, n_clicks): 
+    return (temperature * 1.8) + 32
 
 if __name__ == '__main__':
 #     app.run_server(debug=False,dev_tools_ui=False,dev_tools_props_check=False)

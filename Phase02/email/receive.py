@@ -37,6 +37,7 @@ def activateFan():
 message = ''
 mail_content = ''
 replybody = ''
+replylist = [];
 #SETUP PERMANENT EMAIL AND HARD CODED PASSWORD
 while True:
 
@@ -72,6 +73,8 @@ while True:
                             replybody = str(mail_content.split('\n', 1)[0])
                             print(f'IF THIS IS NOT YES WHEN YOU REPLY TO THE ORIGINAL EMAIL ITS BAD: {replybody}')
                             replybody = (replybody.upper()).strip()
+                            replylist.append(replybody)
+                            print(replylist)
                             # Uncomment these print lines just check values for testing purpose
 #                             print(replybody)
 #                             print(len(str(replybody)))
@@ -79,8 +82,19 @@ while True:
 #                             print(len(str(replybody)) == 3)
                             
                             # Makes sure only "YES" would activate the fan
-                            if replybody.__eq__("YES") and len(str(replybody)) == 3:
+                            if replybody.__eq__("YES") and len(str(replybody)) == 3 and replylist[0] == "YES":
                                 activateFan()
+                            if replylist[0] == "NO":
+                                #status, data = mail.fetch(i, '(RFC822)')
+                                status, data = mail.search(None,'(FROM "iotdashboard2022@outlook.com" SUBJECT "FAN CONTROL" UNSEEN)')
+                                for num in data[0].split():
+                                    mail.store(num, '+FLAGS', '\\Deleted')
+                                mail.expunge()
+                                
+                                
+                            
+                            replylist.clear()
+                            #print(replylist)
                             
                 else:
                     #This part gets called when the email is not a reply (left for testing)

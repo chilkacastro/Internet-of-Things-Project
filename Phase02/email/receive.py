@@ -39,7 +39,9 @@ mail_content = ''
 replybody = ''
 #SETUP PERMANENT EMAIL AND HARD CODED PASSWORD
 while True:
+
     mail = imaplib.IMAP4_SSL(SERVER)
+    time.sleep(5)
     mail.login(EMAIL, PASSWORD)
     mail.select('inbox')
     #SUBJECT is set to fan control so it detects that its a reply probably
@@ -86,9 +88,5 @@ while True:
                     print(f'From: {mail_from}')
                     print(f'Subject: {mail_subject}')
                     print(f'Content: {mail_content}')
-                    
-
-
-                    
-
+      
 

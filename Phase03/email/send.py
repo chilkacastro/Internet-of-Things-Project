@@ -1,4 +1,5 @@
 import smtplib, ssl, getpass
+from datetime import datetime
 
 class Send: 
     #code to send the email
@@ -8,8 +9,10 @@ class Send:
         sender_email = "iotdashboard2022@outlook.com"
         receiver_email = "iotdashboard2022@outlook.com"
         password = 'iotpassword123'
-        subject = "Subject: FAN CONTROL" 
-        body = "Your home temperature is greater than 24. Do you wish to turn on the fan. Reply YES if so."
+        subject = "Subject: LIGHT NOTIFICATION" 
+        current_time = datetime.now()
+        time = current_time.strftime("%H:%M")
+        body = "The Light is ON at " + time
         message = subject + '\n\n' + body
         context = ssl.create_default_context()
         with smtplib.SMTP(smtp_server, port) as server:

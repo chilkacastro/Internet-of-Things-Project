@@ -12,22 +12,27 @@ import smtplib, ssl, getpass, imaplib, email
 import random
 from paho.mqtt import client as mqtt_client
 
-broker = '192.168.0.158'
+#------------PHASE03 VARIABLE CODES--------------
+# broker = '192.168.0.158' #ip in Lab class
+broker = '192.168.1.110'
 port = 1883
 topic = "esp/lightintensity"
 # generate client ID with pub prefix randomly
 client_id = f'python-mqtt-{random.randint(0, 100)}'
 # username = 'emqx'
 # password = 'public'
+esp_message = 0
+# -----------------------------------------------
 
+#------------PHASE02 VARIABLE CODES--------------
 EMAIL = 'iotdashboard2022@outlook.com'
 PASSWORD = 'iotpassword123'
 
 SERVER = 'outlook.office365.com'
 temperature = 0
-DHTPin = 40 #equivalent to GPIO21
+DHTPin = 40 # equivalent to GPIO21
 fan_status_checker=False
-esp_message = 0
+
 GPIO.setmode(GPIO.BOARD)
 GPIO.setwarnings(False)
 Motor1 = 35 # Enable Pin
@@ -40,6 +45,9 @@ GPIO.setup(Motor3,GPIO.IN)
 
 url="https://assets5.lottiefiles.com/packages/lf20_UdIDHC.json"
 options = dict(loop=True, autoplay=True, rendererSettings=dict(preserveAspectRatio='xMidYMid slice'))
+
+# -----------------------------------------------
+
 app = Dash(external_stylesheets=[dbc.themes.SKETCHY])
 nav_menu= dbc.NavbarSimple(
     brand="PHASE02",
@@ -93,11 +101,10 @@ app.layout = html.Div([nav_menu,
 #         ]
 #         )
 #      ]),
-        daq.GraduatedBar(
+        daq.LEDDisplay(
             id='light-intensity',
             label="Light Intensity",
-            max = 1000
-        ),               
+        ),
         dcc.Interval(
             id='interval_component',
              disabled=False,
@@ -120,13 +127,13 @@ app.layout = html.Div([nav_menu,
         dcc.Interval(
             id = 'fan-update',
             disabled=False,
-            interval = 1*8000,   #lower than 5000 for temperature wouldn't show the temp on the terminal
+            interval = 1*8000,  
             n_intervals = 0,
         ),
         dcc.Interval(
             id = 'light-intensity-update',
             disabled=False,
-            interval = 1*4000,   #lower than 5000 for temperature wouldn't show the temp on the terminal
+            interval = 1*1000,   
             n_intervals = 0,
         ),
     
@@ -203,55 +210,48 @@ app.layout = html.Div([nav_menu,
 #     else:
 #         return "Status: Off",{'display':'none'}
     
+# CONVERSION NOT YET DONE
 # @app.callback([Output('my-thermometer-1', 'value')] ,
 #               [Input('temp-update', 'n_intervals'),
 #               Input('fahrenheit-button', 'n_clicks')])
 # def changeToFahrenheit(n_intervals, n_clicks): 
 #     return (temperature * 1.8) + 32
 
-# 
-# @app.callback(Output('light_h1', 'children'), Input('interval_component', 'n_intervals'))
-# def update_light_h1(n):
-#     run();
-@app.callback(Output('light-intensity', 'value'),Input('light-intensity-update', 'n_intervals'))  
+# PHASE 03 CODE FOR SUBSCRIBE 
+@app.callback(Output('light-intensity', 'value'), Input('light-intensity-update', 'n_intervals'))  
 def update_output(value):
     run()
+    # print("Here: ", esp_message) UNCOMMENT TO SEE THE VALUE PASSED FROM THE PUBLISHER 
     value = esp_message
-    print("Value :" + value)
-    return esp_message
-
+    return value
 
 def connect_mqtt() -> mqtt_client:
     def on_connect(client, userdata, flags, rc):
         if rc == 0:
             print("Connected to MQTT Broker!")
+            time.sleep(5)
         else:
             print("Failed to connect, return code %d\n", rc)
 
     client = mqtt_client.Client(client_id)
-#     client.username_pw_set(username, password)
     client.on_connect = on_connect
     client.connect(broker, port)
     return client
 
-
 def subscribe(client: mqtt_client):
     def on_message(client, userdata, msg):
-#         print(f"Received `{msg.payload.decode()}` from `{msg.topic}` topic")
+        global esp_message
         esp_message = int(float(msg.payload.decode()))
-        print(esp_message)
+        
     client.subscribe(topic)
     client.on_message = on_message
-
-
+    
 def run():
     client = connect_mqtt()
     subscribe(client)
-    client.loop_forever()
-
+    client.loop_start()
 
 if __name__ == '__main__':
-#     app.run_server(debug=False,dev_tools_ui=False,dev_tools_props_check=False)
     app.run_server(debug=False,dev_tools_ui=False,dev_tools_props_check=False)
 
         

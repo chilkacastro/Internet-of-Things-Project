@@ -1,9 +1,13 @@
 #include <ESP8266WiFi.h>
 #include <PubSubClient.h>
 
-const char* ssid = "TP-Link_2AD8";
-const char* password = "14730078";
-const char* mqtt_server = "192.168.0.158";
+//SET THIS THREE VALUES IF TESTING THE CODE
+//const char* ssid = "TP-Link_2AD8";
+//const char* password = "14730078";
+//const char* mqtt_server = "192.168.0.158"
+const char* ssid = "EBOX-9994";
+const char* password = "97479ec13d";
+const char* mqtt_server = "192.168.1.110";
 WiFiClient vanieriot;
 PubSubClient client(vanieriot);
 
@@ -76,7 +80,6 @@ void loop() {
   value = analogRead(pResistor);
   Serial.println("Light intensity is: ");
   Serial.println(value);
-  delay(1000);
 
   //publish value
   char pResistorValue[8];

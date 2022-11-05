@@ -11,6 +11,7 @@ import Freenove_DHT as DHT
 import smtplib, ssl, getpass, imaplib, email
 import random
 from paho.mqtt import client as mqtt_client
+from datetime import datetime
 
 #------------PHASE03 VARIABLE CODES--------------
 # broker = '192.168.0.158' #ip in Lab class
@@ -22,6 +23,11 @@ client_id = f'python-mqtt-{random.randint(0, 100)}'
 # username = 'emqx'
 # password = 'public'
 esp_message = 0
+GPIO.setmode(GPIO.BOARD)
+GPIO.setwarnings(False)
+LedPin = 35 # Led Pin/Enable Pin
+GPIO.setup(LedPin,GPIO.OUT)
+email_counter = 0    # just checks if email has been sent at some stage
 # -----------------------------------------------
 
 #------------PHASE02 VARIABLE CODES--------------
@@ -33,15 +39,15 @@ temperature = 0
 DHTPin = 40 # equivalent to GPIO21
 fan_status_checker=False
 
-GPIO.setmode(GPIO.BOARD)
-GPIO.setwarnings(False)
-Motor1 = 35 # Enable Pin
-Motor2 = 37 # Input Pin
-Motor3 = 33 # Input Pin
+#GPIO.setmode(GPIO.BOARD)
+#GPIO.setwarnings(False)
+#Motor1 = 35 # Enable Pin
+#Motor2 = 37 # Input Pin
+#Motor3 = 33 # Input Pin
 
-GPIO.setup(Motor1,GPIO.IN)
-GPIO.setup(Motor2,GPIO.IN)
-GPIO.setup(Motor3,GPIO.IN)
+#GPIO.setup(Motor1,GPIO.IN)
+#GPIO.setup(Motor2,GPIO.IN)
+#GPIO.setup(Motor3,GPIO.IN)
 
 url="https://assets5.lottiefiles.com/packages/lf20_UdIDHC.json"
 options = dict(loop=True, autoplay=True, rendererSettings=dict(preserveAspectRatio='xMidYMid slice'))
@@ -104,6 +110,10 @@ app.layout = html.Div([nav_menu,
         daq.LEDDisplay(
             id='light-intensity',
             label="Light Intensity",
+        ),
+        html.H1(
+            id='email_h1',
+            style={'text-align':'center'}
         ),
         dcc.Interval(
             id='interval_component',
@@ -218,12 +228,50 @@ app.layout = html.Div([nav_menu,
 #     return (temperature * 1.8) + 32
 
 # PHASE 03 CODE FOR SUBSCRIBE 
+def sendEmail():
+        port = 587  # For starttls
+        smtp_server = "smtp-mail.outlook.com"
+        sender_email = "iotdashboard2022@outlook.com"
+        receiver_email = "iotdashboard2022@outlook.com"
+        password = 'iotpassword123'
+        subject = "Subject: LIGHT NOTIFICATION" 
+        current_time = datetime.now()
+        time = current_time.strftime("%H:%M")
+        body = "The Light is ON at " + time
+        message = subject + '\n\n' + body
+        context = ssl.create_default_context()
+        with smtplib.SMTP(smtp_server, port) as server:
+            server.ehlo()  # Can be omitted
+            server.starttls(context=context)
+            server.ehlo()  # Can be omitted
+            server.login(sender_email, password)
+            server.sendmail(sender_email, receiver_email, message)
+            
+ 
+def turn_led_on(value):         # turn led on depending on value send email and increase the email counter to know there is an email sent
+     if value < 400:
+        GPIO.output(LedPin, True)
+        sendEmail()
+        email_counter += 1
+     else:
+        GPIO.output(LedPin, False)  
+
 @app.callback(Output('light-intensity', 'value'), Input('light-intensity-update', 'n_intervals'))  
 def update_output(value):
     run()
     # print("Here: ", esp_message) UNCOMMENT TO SEE THE VALUE PASSED FROM THE PUBLISHER 
     value = esp_message
+    turn_led_on(value)              # turn led on and send email.
     return value
+
+@app.callback(Output('email_h1', 'children'), Input('interval_component', 'n_intervals'))       # update email sent message
+def update_email_status(n):
+     if email_counter > 0:
+         return "Email has been sent."
+     
+     else:
+         return "No email has been sent."
+
 
 def connect_mqtt() -> mqtt_client:
     def on_connect(client, userdata, flags, rc):

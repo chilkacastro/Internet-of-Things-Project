@@ -263,8 +263,9 @@ def update_output(value):
     run()
     # print("Here: ", esp_message) UNCOMMENT TO SEE THE VALUE PASSED FROM THE PUBLISHER 
     value = esp_message
-#     turn_led_on(value)              # turn led on and send email.
+    turn_led_on(value)              # turn led on and send email.
     return value
+
 @app.callback(Output('email_h1', 'children'), Input('interval_component', 'n_intervals'))       # update email sent message
 def update_email_status(n):
       if email_counter > 0:

@@ -88,7 +88,7 @@ void loop() {
   Serial.println("Light intensity is: ");
   Serial.println(value);
 
-  if (value >= 400) {
+  if (value < 400) {
     digitalWrite(ledPin, HIGH);
     ledStatus = "ON";
     Serial.println("Led Status Activated: ");

@@ -249,30 +249,21 @@ def sendEmail():
              server.login(sender_email, password)
              server.sendmail(sender_email, receiver_email, message)
              
- 
-def turn_led_on(value):         # turn led on depending on value send email and increase the email counter to know there is an email sent
-      if value < 400:
-         GPIO.output(LedPin, True)
-         sendEmail()
-         email_counter += 1
-      else:
-         GPIO.output(LedPin, False)  
+
+#def turn_led_on(value):         # turn led on depending on value send email and increase the email counter to know there is an email sent
+#      if value < 400:
+#         GPIO.output(LedPin, True)
+#         sendEmail()
+#         email_counter += 1
+#      else:
+#         GPIO.output(LedPin, False)  
 
 @app.callback(Output('light-intensity', 'value'), Input('light-intensity-update', 'n_intervals'))  
 def update_output(value):
     run()
     # print("Here: ", esp_message) UNCOMMENT TO SEE THE VALUE PASSED FROM THE PUBLISHER 
     value = esp_message
-    turn_led_on(value)              # turn led on and send email.
     return value
-
-@app.callback(Output('email_h1', 'children'), Input('interval_component', 'n_intervals'))       # update email sent message
-def update_email_status(n):
-      if email_counter > 0:
-          return "Email has been sent."
-      
-      else:
-          return "No email has been sent."
 
 # def on_connect(client, userdata, flags, rc):
 #    print("Connected With Result Code " + (rc))
@@ -328,6 +319,24 @@ def run():
 
 if __name__ == '__main__':
     app.run_server(debug=False,dev_tools_ui=False,dev_tools_props_check=False)
+
+def send_led_email_check(value):         # send email and increase the email counter to know there is an email sent
+      if value == "ON":
+         sendEmail()
+         email_counter += 1
+
+@app.callback(Output('email_h1', 'children'), Input('interval_component', 'n_intervals'))       # update email sent message
+def update_email_status(n):
+    run()
+    value = esp_lightswitch_message
+    send_led_email_check(value)
+    if email_counter > 0:
+        return "Email has been sent."
+      
+    else:
+        return "No email has been sent."
+
+        
 
         
 

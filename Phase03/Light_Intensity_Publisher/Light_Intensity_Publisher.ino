@@ -4,12 +4,17 @@
 //SET THIS THREE VALUES IF TESTING THE CODE
 //const char* ssid = "TP-Link_2AD8";
 //const char* password = "14730078";
-//const char* mqtt_server = "192.168.0.158"
+//const char* mqtt_server = "192.168.0.158";
 
 // Chilka: I'm testing this at home so just change this three lines if you want to test it too
-const char* ssid = "EBOX-9994";
-const char* password = "97479ec13d";
-const char* mqtt_server = "192.168.1.110";
+//const char* ssid = "EBOX-9994";
+//const char* password = "97479ec13d";
+//const char* mqtt_server = "192.168.1.110";
+
+
+const char* ssid = "moto g power 1331";
+const char* password = "12345678";
+const char* mqtt_server = "192.168.76.10";
 WiFiClient vanieriot;
 PubSubClient client(vanieriot);
 
@@ -83,7 +88,6 @@ void loop() {
 
 // get value of the light intensity
   value = analogRead(pResistor);
-  delay(10000);
   digitalWrite(ledPin, LOW);
   Serial.println("Light intensity is: ");
   Serial.println(value);

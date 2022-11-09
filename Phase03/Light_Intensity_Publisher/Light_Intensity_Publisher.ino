@@ -7,14 +7,14 @@
 //const char* mqtt_server = "192.168.0.158";
 
 // Chilka: I'm testing this at home so just change this three lines if you want to test it too
-//const char* ssid = "EBOX-9994";
-//const char* password = "97479ec13d";
-//const char* mqtt_server = "192.168.1.110";
+const char* ssid = "EBOX-9994";
+const char* password = "97479ec13d";
+const char* mqtt_server = "192.168.1.110";
 
 
-const char* ssid = "moto g power 1331";
-const char* password = "12345678";
-const char* mqtt_server = "192.168.76.10";
+//const char* ssid = "moto g power 1331";
+//const char* password = "12345678";
+//const char* mqtt_server = "192.168.76.10";
 WiFiClient vanieriot;
 PubSubClient client(vanieriot);
 

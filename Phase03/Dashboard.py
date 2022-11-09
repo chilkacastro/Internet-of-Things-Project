@@ -1,5 +1,5 @@
 from dash import Dash, html, dcc, Input, Output, State
-from dash_bootstrap_templates import ThemeChangerAIO, template_from_url
+# from dash_bootstrap_templates import ThemeChangerAIO, template_from_url
 import dash_bootstrap_components as dbc
 import dash_extensions as de
 import dash_daq as daq
@@ -16,8 +16,8 @@ from datetime import datetime
 
 #------------PHASE03 VARIABLE CODES--------------
 # broker = '192.168.0.158' #ip in Lab class
-broker = '192.168.76.10'
-# broker = '192.168.1.110'
+# broker = '192.168.76.10'
+broker = '192.168.1.110' #chilka home
 port = 1883
 topic1 = "esp/lightintensity"
 topic2 = "esp/lightswitch"
@@ -53,6 +53,8 @@ fan_status_checker=False
 #GPIO.setup(Motor2,GPIO.IN)
 #GPIO.setup(Motor3,GPIO.IN)
 
+light_bulb_off="https://media.geeksforgeeks.org/wp-content/uploads/OFFbulb.jpg"
+light_bulb_on="https://media.geeksforgeeks.org/wp-content/uploads/ONbulb.jpg"
 url="https://assets5.lottiefiles.com/packages/lf20_UdIDHC.json"
 options = dict(loop=True, autoplay=True, rendererSettings=dict(preserveAspectRatio='xMidYMid slice'))
 
@@ -64,6 +66,7 @@ daq_Gauge = daq.Gauge(
                 id='my-gauge-1',
                 label="Humidity",
                 showCurrentValue=True,
+                value = 62,
                 max=100,
                 min=0)
 
@@ -71,6 +74,7 @@ daq_Gauge = daq.Gauge(
 daq_Thermometer = daq.Thermometer(
                         id='my-thermometer-1',
                         min=-40,
+                        value = 18,
                         max=160,
                         scale={'start': -40, 'interval': 25},
                         label="Temperature(Celsius)",
@@ -81,6 +85,7 @@ html_Button_Celcius_To_Fahrenheit =  html.Button('Fahrenheit', id='fahrenheit-bu
 
 # all fan related html
 html_Fan_Label = html.H1('Fan',style={'text-align':'center'})
+html.Img
 html_Div_Fan_Gif = html.Div([de.Lottie(options=options, width="25%", height="25%", url=url)], id='my-gif', style={'display':'none'})
 html_Fan_Status_Message = html.H1(id='fan_status_message',style={'text-align':'center'})
 
@@ -89,7 +94,8 @@ html_Fan_Status_Message = html.H1(id='fan_status_message',style={'text-align':'c
 html_Light_Intensity_Label =  html.H1('LightIntensity',style={'text-align':'center'})
 daq_Led_Light_Intensity_LEDDisplay = daq.LEDDisplay(
                                         id='light-intensity',
-                                        label="Light Intensity")
+                                        label="Light Intensity",
+                                        value = 0)
 html_Led_Status_Message = html.H1(id='light_h1',style={'text-align':'center'})  #not used yet
 
 # intervals
@@ -130,22 +136,26 @@ led_On_Email_Interval = dcc.Interval(
             interval = 1*2000,   
             n_intervals = 0)
 
-
-# DESIGN AND LAYOUT
-navbar = dbc.NavbarSimple(
-    children=[
-        dbc.NavItem(theme_change, style={'padding': 0, 'border':'none', 'border-color': 'black', 'background': 'none'}),
-    ],
-    brand="IOT SMART HOME",
-    color="dark",
+navbar= dbc.NavbarSimple(
+    brand="PHASE03",
+    color="secondary",
     dark=True,
-    sticky="top")
+)
+# DESIGN AND LAYOUT
+# navbar = dbc.NavbarSimple(
+#     children=[
+#         dbc.NavItem(theme_change, style={'padding': 0, 'border':'none', 'border-color': 'black', 'background': 'none'}),
+#     ],
+#     brand="IOT SMART HOME",
+#     color="dark",
+#     dark=True,
+#     sticky="top")
 
 
 sidebar = html.Div([
     html.H1('User Profile', style={'text-align': 'center'}),
     dbc.CardBody([
-            html.Img(src='assets/minion.jpg', style={'border-radius': '50%' }),
+            html.Img(src='assets/minion.jpg', style={'border-radius': '80px', 'width':'140px', 'height':'140px', 'object-fit': 'cover'}),
             html.H6("Username"),
             html.H4("Favorites: "),
             html.H6("Humidity"),
@@ -158,40 +168,27 @@ content = html.Div([
         ])
 
 
+# app = Dash(__name__, external_stylesheets=[dbc.themes.CYBORG])
+# theme_change = ThemeChangerAIO(aio_id="theme", radio_props={"persistence": True}, button_props={"color": "danger","children": "Change Theme"})
+app = Dash(external_stylesheets=[dbc.themes.CYBORG])
 
-app.layout = dbc.Container(
-    [
-        dbc.Row(navbar),
-        dbc.Row(
-            [
-                dbc.Col(sidebar, width=3, className='bg-light'),
-                dbc.Col(content, width=9)
-                ],
-            style={"height": "100vh"}
-            ),
-        ],
-    fluid=True
-)
-
-
-app = Dash(__name__, external_stylesheets=[dbc.themes.CYBORG])
-theme_change = ThemeChangerAIO(aio_id="theme", radio_props={"persistence": True}, button_props={"color": "danger","children": "Change Theme"})
 app.layout = dbc.Container([
                 dbc.Row(navbar),
                 dbc.Row([
                     dbc.Col(sidebar, width=3, className='bg-light'), 
-                    dbc.Col(content,
-                         dbc.Row([
+                    dbc.Col(
+                        dbc.Row([
                             dbc.Col(daq_Gauge, width=4),
-                            dbc.Col(dbc.Row([daq_Thermometer, html_Button_Celcius_To_Fahrenheit]), width=4),
-                            dbc.Col(dbc.Row([html_Fan_Label, html_Div_Fan_Gif, html_Fan_Status_Message]), width=4),
-                            dbc.Col(dbc.Row([html_Light_Intensity_Label, html_Led_Status_Message]), width=4),
-                            daq_Led_Light_Intensity_LEDDisplay,    
-                            html.H1(id='email_h1',style ={"text-align":"center"}),
+                            dbc.Col(dbc.Row([daq_Thermometer, html_Button_Celcius_To_Fahrenheit])),
+                            dbc.Col(dbc.Row([html_Fan_Label, html_Div_Fan_Gif, html_Fan_Status_Message])),
+#                             dbc.Col(dbc.Row([html_Light_Intensity_Label, html_Led_Status_Message])),
+                            dbc.Col(dbc.Row([daq_Led_Light_Intensity_LEDDisplay, html.Img(id="light-bulb", src=light_bulb_off, style={'width':'140px', 'height':'140px'}),html.H1(id='email_h1',style ={"text-align":"center"})])),
                             fan_Status_Message_Interval, humidity_Interval, temperature_Interval, light_Intensity_Interval, led_On_Email_Interval
-                         ]),
-                    width=9)],style={"height": "100vh"}),
-            ], fluid=True) 
+                         ]), #inner Row
+                    width=9) # content col
+                    
+                    ], style={"height": "100vh"}), # outer
+            ], fluid=True) #container
 
 @app.callback(Output('my-gauge-1', 'value'), Input('humid-update', 'n_intervals'))
 def update_output(value):
@@ -321,7 +318,7 @@ def on_message_from_lightintensity(client, userdata, message):
 def on_message_from_lightswitch(client, userdata, message):
    global esp_lightswitch_message
    esp_lightswitch_message = message.payload.decode()
-   print("Message Recieved from lightswitch: ")
+   print("Message Received from lightswitch: ")
    print(esp_lightswitch_message)
 
 def on_message(client, userdata, message):
@@ -342,14 +339,14 @@ def send_led_email_check(value):         # send email and increase the email cou
          email_counter += 1
 
 #printing
-@app.callback(Output('email_h1', 'children'), Input('led-email-status-update', 'n_intervals'))       # update email sent message
+@app.callback([Output('email_h1', 'children'), Output('light-bulb', 'src')], Input('led-email-status-update', 'n_intervals'))       # update email sent message
 def update_email_status(value):
     send_led_email_check(esp_lightswitch_message)
     print(email_counter + str(email_counter))
     if email_counter > 0:
-        return "Email has been sent."
+        return "Email has been sent.", light_bulb_on
     else:
-        return "No email has been sent."
+        return "No email has been sent.", light_bulb_off
 
 if __name__ == '__main__':
     app.run_server(debug=False,dev_tools_ui=False,dev_tools_props_check=False)

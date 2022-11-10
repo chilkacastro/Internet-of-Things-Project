@@ -1,5 +1,5 @@
 from dash import Dash, html, dcc, Input, Output, State
-# from dash_bootstrap_templates import ThemeChangerAIO, template_from_url
+from dash_bootstrap_templates import ThemeChangerAIO, template_from_url
 import dash_bootstrap_components as dbc
 import dash_extensions as de
 import dash_daq as daq
@@ -11,8 +11,21 @@ from time import sleep
 import Freenove_DHT as DHT
 import smtplib, ssl, getpass, imaplib, email
 import random
+import dash_draggable
 from paho.mqtt import client as mqtt_client
 from datetime import datetime
+
+app = Dash(__name__)
+theme_change = ThemeChangerAIO(aio_id="theme", radio_props={"persistence": True}, button_props={"color": "danger","children": "Change Theme"})
+navbar = dbc.NavbarSimple(
+    children=[
+        dbc.NavItem(theme_change),
+    ],
+    brand="IOT SMART HOME",
+    color="dark",
+    dark=True,
+    sticky="top"
+)
 
 #------------PHASE03 VARIABLE CODES--------------
 # broker = '192.168.0.158' #ip in Lab class
@@ -43,15 +56,15 @@ temperature = 0
 DHTPin = 40 # equivalent to GPIO21
 fan_status_checker=False
 
-#GPIO.setmode(GPIO.BOARD)
-#GPIO.setwarnings(False)
-#Motor1 = 35 # Enable Pin
-#Motor2 = 37 # Input Pin
-#Motor3 = 33 # Input Pin
+GPIO.setmode(GPIO.BOARD)
+GPIO.setwarnings(False)
+Motor1 = 35 # Enable Pin
+Motor2 = 37 # Input Pin
+Motor3 = 33 # Input Pin
 
-#GPIO.setup(Motor1,GPIO.IN)
-#GPIO.setup(Motor2,GPIO.IN)
-#GPIO.setup(Motor3,GPIO.IN)
+GPIO.setup(Motor1,GPIO.IN)
+GPIO.setup(Motor2,GPIO.IN)
+GPIO.setup(Motor3,GPIO.IN)
 
 light_bulb_off="https://media.geeksforgeeks.org/wp-content/uploads/OFFbulb.jpg"
 light_bulb_on="https://media.geeksforgeeks.org/wp-content/uploads/ONbulb.jpg"
@@ -67,6 +80,7 @@ daq_Gauge = daq.Gauge(
                 label="Humidity",
                 showCurrentValue=True,
                 value = 62,
+                size=200,
                 max=100,
                 min=0)
 
@@ -81,11 +95,10 @@ daq_Thermometer = daq.Thermometer(
                         showCurrentValue=True,
                         units="C",
                         color="red")
-html_Button_Celcius_To_Fahrenheit =  html.Button('Fahrenheit', id='fahrenheit-button', n_clicks=0)
+html_Button_Celcius_To_Fahrenheit =  html.Button('Fahrenheit', id='fahrenheit-button', n_clicks=0, style={'width':'20%'})
 
 # all fan related html
-html_Fan_Label = html.H1('Fan',style={'text-align':'center'})
-html.Img
+html_Fan_Label = html.H6('Fan',style={'text-align':'center'})
 html_Div_Fan_Gif = html.Div([de.Lottie(options=options, width="25%", height="25%", url=url)], id='my-gif', style={'display':'none'})
 html_Fan_Status_Message = html.H1(id='fan_status_message',style={'text-align':'center'})
 
@@ -95,7 +108,7 @@ html_Light_Intensity_Label =  html.H1('LightIntensity',style={'text-align':'cent
 daq_Led_Light_Intensity_LEDDisplay = daq.LEDDisplay(
                                         id='light-intensity',
                                         label="Light Intensity",
-                                        value = 0)
+                                        value = 0, size=64)
 html_Led_Status_Message = html.H1(id='light_h1',style={'text-align':'center'})  #not used yet
 
 # intervals
@@ -136,26 +149,11 @@ led_On_Email_Interval = dcc.Interval(
             interval = 1*2000,   
             n_intervals = 0)
 
-navbar= dbc.NavbarSimple(
-    brand="PHASE03",
-    color="secondary",
-    dark=True,
-)
-# DESIGN AND LAYOUT
-# navbar = dbc.NavbarSimple(
-#     children=[
-#         dbc.NavItem(theme_change, style={'padding': 0, 'border':'none', 'border-color': 'black', 'background': 'none'}),
-#     ],
-#     brand="IOT SMART HOME",
-#     color="dark",
-#     dark=True,
-#     sticky="top")
-
 
 sidebar = html.Div([
-    html.H1('User Profile', style={'text-align': 'center'}),
+    html.H3('User Profile', style={'text-align': 'center'}),
     dbc.CardBody([
-            html.Img(src='assets/minion.jpg', style={'border-radius': '80px', 'width':'140px', 'height':'140px', 'object-fit': 'cover'}),
+            html.Img(src='assets/minion.jpg', style={'border-radius': '80px', 'width':'140px', 'height':'140px', 'object-fit': 'cover', 'display': 'block','margin-left':'auto','margin-right': 'auto'}),
             html.H6("Username"),
             html.H4("Favorites: "),
             html.H6("Humidity"),
@@ -164,61 +162,54 @@ sidebar = html.Div([
     ])
 
 content = html.Div([
-            html.P('Content')
+           dbc.Row([
+#               dbc.Col(dbc.Row([daq_Gauge, daq_Thermometer, html_Button_Celcius_To_Fahrenheit,html_Fan_Label, html_Div_Fan_Gif, html_Fan_Status_Message]), width=7),
+                dbc.Col(dbc.Row([daq_Gauge, daq_Thermometer,html_Div_Fan_Gif, html_Fan_Status_Message]), width=5),
+        #                             dbc.Col(dbc.Row([html_Light_Intensity_Label, html_Led_Status_Message])),
+                dbc.Col(dbc.Row([daq_Led_Light_Intensity_LEDDisplay, html.Img(id="light-bulb", src=light_bulb_off,
+                    style={'width':'100px', 'height':'100px', 'display': 'block','margin-left':'auto','margin-right': 'auto', 'margin-top':'10px'}),
+                    html.H1(id='email_h1',style ={"text-align":"center"})]), width=4, className="border border-secondary"),
+                fan_Status_Message_Interval, humidity_Interval, temperature_Interval, light_Intensity_Interval, led_On_Email_Interval
+             ]), #inner Row
         ])
-
-
-# app = Dash(__name__, external_stylesheets=[dbc.themes.CYBORG])
-# theme_change = ThemeChangerAIO(aio_id="theme", radio_props={"persistence": True}, button_props={"color": "danger","children": "Change Theme"})
-app = Dash(external_stylesheets=[dbc.themes.CYBORG])
 
 app.layout = dbc.Container([
                 dbc.Row(navbar),
                 dbc.Row([
-                    dbc.Col(sidebar, width=3, className='bg-light'), 
-                    dbc.Col(
-                        dbc.Row([
-                            dbc.Col(daq_Gauge, width=4),
-                            dbc.Col(dbc.Row([daq_Thermometer, html_Button_Celcius_To_Fahrenheit])),
-                            dbc.Col(dbc.Row([html_Fan_Label, html_Div_Fan_Gif, html_Fan_Status_Message])),
-#                             dbc.Col(dbc.Row([html_Light_Intensity_Label, html_Led_Status_Message])),
-                            dbc.Col(dbc.Row([daq_Led_Light_Intensity_LEDDisplay, html.Img(id="light-bulb", src=light_bulb_off, style={'width':'140px', 'height':'140px'}),html.H1(id='email_h1',style ={"text-align":"center"})])),
-                            fan_Status_Message_Interval, humidity_Interval, temperature_Interval, light_Intensity_Interval, led_On_Email_Interval
-                         ]), #inner Row
-                    width=9) # content col
-                    
-                    ], style={"height": "100vh"}), # outer
+                    dbc.Col(sidebar, width=2), 
+                    dbc.Col(content, width=10, className="bg-secondary") # content col
+                ], style={"height": "100vh"}), # outer
             ], fluid=True) #container
 
-@app.callback(Output('my-gauge-1', 'value'), Input('humid-update', 'n_intervals'))
-def update_output(value):
-    dht = DHT.DHT(DHTPin)   #create a DHT class object
-    while(True):
-        for i in range(0,15):            
-            chk = dht.readDHT11()     #read DHT11 and get a return value. Then determine whether data read is normal according to the return value.
-            if (chk is dht.DHTLIB_OK):      #read DHT11 and get a return value. Then determine whether data read is normal according to the return value.
-                break
-            time.sleep(0.1)
-        time.sleep(2)
-        print("Humidity : %.2f \t \n"%(dht.humidity))  # for testing on the terminal
-        return dht.humidity
-    
-@app.callback([Output('my-thermometer-1', 'value')], Input('temp-update', 'n_intervals'))
-def update_output(value):
-    dht = DHT.DHT(DHTPin)   #create a DHT class object
-    while(True):
-        for i in range(0,15):            
-            chk = dht.readDHT11()     #read DHT11 and get a return value. Then determine whether data read is normal according to the return value.
-            if (chk is dht.DHTLIB_OK):      #read DHT11 and get a return value. Then determine whether data read is normal according to the return value.
-                break
-            time.sleep(0.1)
-        time.sleep(2)
-        temperature = dht.temperature
-        print("Temperature : %.2f \n"%(dht.temperature))
-        if (dht.temperature >= 24):
-            sendEmail()
-          
-        return dht.temperature
+# @app.callback(Output('my-gauge-1', 'value'), Input('humid-update', 'n_intervals'))
+# def update_output(value):
+#     dht = DHT.DHT(DHTPin)   #create a DHT class object
+#     while(True):
+#         for i in range(0,15):            
+#             chk = dht.readDHT11()     #read DHT11 and get a return value. Then determine whether data read is normal according to the return value.
+#             if (chk is dht.DHTLIB_OK):      #read DHT11 and get a return value. Then determine whether data read is normal according to the return value.
+#                 break
+#             time.sleep(0.1)
+#         time.sleep(2)
+#         print("Humidity : %.2f \t \n"%(dht.humidity))  # for testing on the terminal
+#         return dht.humidity
+#     
+# @app.callback([Output('my-thermometer-1', 'value')], Input('temp-update', 'n_intervals'))
+# def update_output(value):
+#     dht = DHT.DHT(DHTPin)   #create a DHT class object
+#     while(True):
+#         for i in range(0,15):            
+#             chk = dht.readDHT11()     #read DHT11 and get a return value. Then determine whether data read is normal according to the return value.
+#             if (chk is dht.DHTLIB_OK):      #read DHT11 and get a return value. Then determine whether data read is normal according to the return value.
+#                 break
+#             time.sleep(0.1)
+#         time.sleep(2)
+#         temperature = dht.temperature
+#         print("Temperature : %.2f \n"%(dht.temperature))
+#         if (dht.temperature >= 24):
+#             sendEmail()
+#           
+#         return dht.temperature
 
 def sendEmail():
         port = 587  # For starttls
@@ -236,31 +227,31 @@ def sendEmail():
             server.ehlo()  # Can be omitted
             server.login(sender_email, password)
             server.sendmail(sender_email, receiver_email, message) 
+# 
+# def is_fan_on():  
+#     if GPIO.input(Motor1) and not GPIO.input(Motor2) and GPIO.input(Motor3):
+#         return True
+#     else:
+#         return False
+# 
+# @app.callback(Output('my-fan-1', 'value'), Input('fan-update', 'n_intervals'))
+# def update_output(value):
+#     fan_status_checker = is_fan_on()
+# #     print(fan_status_checker)
+#     return True if fan_status_checker else False
+#         # return True if GPIO.input(Motor1) and not GPIO.input(Motor2) and GPIO.input(Motor3) else False
+# 
 
-def is_fan_on():  
-    if GPIO.input(Motor1) and not GPIO.input(Motor2) and GPIO.input(Motor3):
-        return True
-    else:
-        return False
-
-@app.callback(Output('my-fan-1', 'value'), Input('fan-update', 'n_intervals'))
-def update_output(value):
-    fan_status_checker = is_fan_on()
-#     print(fan_status_checker)
-    return True if fan_status_checker else False
-        # return True if GPIO.input(Motor1) and not GPIO.input(Motor2) and GPIO.input(Motor3) else False
-
-
-@app.callback([Output('fan_status_message', 'children'), Output('my-gif', 'style')],Input('fan_status_message_update', 'n_intervals'))
-def update_h1(n):
-    fan_status_checker = is_fan_on()
-    
-    if fan_status_checker:
-        return "Status: On", {'display':'block'}
-    
-    else:
-        return "Status: Off",{'display':'none'}
-    
+# @app.callback([Output('fan_status_message', 'children'), Output('my-gif', 'style')],Input('fan_status_message_update', 'n_intervals'))
+# def update_h1(n):
+#     fan_status_checker = is_fan_on()
+#     
+#     if fan_status_checker:
+#         return "Status: On", {'display':'block'}
+#     
+#     else:
+#         return "Status: Off",{'display':'none'}
+#     
 #CONVERSION NOT YET DONE
 @app.callback([Output('my-thermometer-1', 'value')] ,
               [Input('temp-update', 'n_intervals'),
@@ -344,11 +335,13 @@ def update_email_status(value):
     send_led_email_check(esp_lightswitch_message)
     print(email_counter + str(email_counter))
     if email_counter > 0:
-        return "Email has been sent.", light_bulb_on
+        return "Email has been sent. Lightbulb is ON", light_bulb_on
     else:
-        return "No email has been sent.", light_bulb_off
+        return "No email has been sent. Lightbulb is OFF", light_bulb_off
 
 if __name__ == '__main__':
+#     app.run_server(debug=True)
     app.run_server(debug=False,dev_tools_ui=False,dev_tools_props_check=False)
+
 
         

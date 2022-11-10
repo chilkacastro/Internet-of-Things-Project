@@ -11,7 +11,6 @@ const char* ssid = "EBOX-9994";
 const char* password = "97479ec13d";
 const char* mqtt_server = "192.168.1.110";
 
-
 //const char* ssid = "moto g power 1331";
 //const char* password = "12345678";
 //const char* mqtt_server = "192.168.76.10";

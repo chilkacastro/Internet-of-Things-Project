@@ -8,14 +8,15 @@
 MFRC522 rfid(SS_PIN, RST_PIN); // Instance of the class
 MFRC522::MIFARE_Key key;
 
-const char* ssid = "TP-Link_2AD8";
-const char* password = "14730078";
-const char* mqtt_server = "192.168.0.158";
+//const char* ssid = "TP-Link_2AD8";
+//const char* password = "14730078";
+//const char* mqtt_server = "192.168.0.158";
+const char* ssid = "EBOX-9994";
+const char* password = "97479ec13d";
+const char* mqtt_server = "192.168.1.110";
 WiFiClient vanieriot;
 PubSubClient client(vanieriot);
 
-#define MQTT_PUB_RFID_KEYCHAIN "esp/dht/keychain"
-#define MQTT_PUB_RFID_CARD "esp/dht/card"
 
 // Init array that will store new NUID
 byte nuidPICC[4];
@@ -42,12 +43,14 @@ void setup() {
   Serial.print(F("Using the following key:"));
   printHex(key.keyByte, MFRC522::MF_KEY_SIZE);
 }
+
 void loop() {
   if (!client.connected()) {
     reconnect();
   }
   if (!client.loop())
     client.connect("vanieriot");
+  
   // Reset the loop if no new card present on the sensor/reader. This saves the entire process when idle.
   if ( ! rfid.PICC_IsNewCardPresent())
     return;
@@ -76,11 +79,11 @@ void loop() {
     Serial.println(F("The NUID tag is:"));
     Serial.print(F("In hex: "));
     printHex(rfid.uid.uidByte, rfid.uid.size);
-//    Serial.print(rfid.uid.uidByte);/
-    Serial.println();
-    Serial.print(F("In dec: "));
-    printDec(rfid.uid.uidByte, rfid.uid.size);
-    Serial.println();
+
+//    Serial.println();
+//    Serial.print(F("In dec: "));
+//    printDec(rfid.uid.uidByte, rfid.uid.size);
+//    Serial.println();
   }
   else Serial.println(F("Card read previously."));
   // Halt PICC
@@ -92,31 +95,30 @@ void loop() {
   Helper routine to dump a byte array as hex values to Serial.
 */
 void printHex(byte *buffer, byte bufferSize) {  
+  String uid;
   for (byte i = 0; i < bufferSize; i++) {
-
     Serial.print(buffer[i] < 0x10 ? " 0" : " ");
     Serial.print(buffer[i], HEX);
-
-    
+    uid = uid + String(buffer[i], HEX);
   }
- 
+  Serial.println("UID CHILKA: " );
+  Serial.print(uid);
+  client.publish("esp/rfid", (char*) uid.c_str());
+  client.publish("esp/rfid", (char*) uid.c_str());
+  client.publish("esp/rfid", (char*) uid.c_str());
 }
 /**
   Helper routine to dump a byte array as dec values to Serial.
 */
-void printDec(byte *buffer, byte bufferSize) {
-char rfidArr[bufferSize];
-//  unsigned long value = 0;
-  for (byte i = 0; i < bufferSize; i++) {
-    Serial.print(buffer[i] < 0x10 ? " 0" : " ");
-    rfidArr[i] = buffer[i];
-    
-//    /
-//    Serial.println();
-//    Serial.print(buffer[i], DEC);/
-  }
-  client.publish("esp/dht/rfid", rfidArr);
-}
+//void printDec(byte *buffer, byte bufferSize) {
+//  for (byte i = 0; i < bufferSize; i++) {
+//    Serial.print(buffer[i] < 0x10 ? " 0" : " ");
+//    Serial.print(buffer[i], DEC);
+//  }
+//
+//   
+//}
+
 void setup_wifi() {
   delay(10);
   // We start by connecting to a WiFi network

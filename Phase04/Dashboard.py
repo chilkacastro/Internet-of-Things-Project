@@ -29,16 +29,18 @@ navbar = dbc.NavbarSimple(
 #------------PHASE03 VARIABLE CODES--------------
 # broker = '192.168.0.158' #ip in Lab class
 # broker = '192.168.76.10'
-# broker = '192.168.1.110' #chilka home
-broker = '192.168.0.198'
+broker = '192.168.1.110' #chilka home
+# broker = '192.168.0.198'
 port = 1883
 topic1 = "esp/lightintensity"
 topic2 = "esp/lightswitch"
+topic3 = "esp/rfid"
 # generate client ID with pub prefix randomly
 client_id = f'python-mqtt-{random.randint(0, 100)}'
 # username = 'emqx'
 # password = 'public'
 esp_message = 0
+esp_rfid_message = "RFID"
 esp_lightswitch_message = "OFF"
 GPIO.setmode(GPIO.BOARD)
 GPIO.setwarnings(False)
@@ -149,6 +151,11 @@ led_On_Email_Interval = dcc.Interval(
             interval = 1*2000,   
             n_intervals = 0)
 
+rfid_Interval = dcc.Interval(
+            id = 'rfid-code-update',
+            disabled=False,
+            interval = 1*10000,   
+            n_intervals = 0)
 
 sidebar = html.Div([
     html.H3('User Profile', style={'text-align': 'center'}),
@@ -177,14 +184,14 @@ card_content1 = dbc.Col(dbc.Row([daq_Gauge, daq_Thermometer, html_Div_Fan_Gif, h
 card_content2 = dbc.Col(
                     dbc.Row([daq_Led_Light_Intensity_LEDDisplay, html.Img(id="light-bulb", src=light_bulb_off,
                     style={'width':'100px', 'height':'100px', 'display': 'block','margin-left':'auto','margin-right': 'auto', 'margin-top':'10px'}),
-                    html.H5(id='email_h1',style ={"text-align":"center"})]))
+                    html.H5(id='email_h1',style ={"text-align":"center"}), html.H5(id='rfid_h1',style ={"text-align":"center"})]))
 content = html.Div([
            dbc.Row([
 #               dbc.Col(dbc.Row([daq_Gauge, daq_Thermometer, html_Button_Celcius_To_Fahrenheit,html_Fan_Label, html_Div_Fan_Gif, html_Fan_Status_Message]), width=7),
                 dbc.Card(card_content1, color="secondary", inverse=True, style={"width": "45rem", 'height': "80rem"}),
         #                             dbc.Col(dbc.Row([html_Light_Intensity_Label, html_Led_Status_Message])),
                 dbc.Card(card_content2, color="secondary", inverse=True, style={"width": "50rem", 'height': "80rem"}),
-                fan_Status_Message_Interval, humidity_Interval, temperature_Interval, light_Intensity_Interval, led_On_Email_Interval
+                fan_Status_Message_Interval, humidity_Interval, temperature_Interval, light_Intensity_Interval, led_On_Email_Interval, rfid_Interval
              ]), #inner Row
         ])
 
@@ -307,7 +314,7 @@ def update_output(value):
 def connect_mqtt() -> mqtt_client:
     def on_connect(client, userdata, flags, rc):
         if rc == 0:
-            print("Connected to MQTT Broker!")
+#             print("Connected to MQTT Broker!")
             time.sleep(10)
         else:
             print("Failed to connect, return code %d\n", rc)
@@ -328,6 +335,12 @@ def on_message_from_lightswitch(client, userdata, message):
    print("Message Received from lightswitch: ")
    print(esp_lightswitch_message)
 
+def on_message_from_rfid(client, userdata, message):
+   global esp_rfid_message
+   esp_rfid_message = message.payload.decode()
+   print("Message Received from rfid: ")
+   print(esp_rfid_message)
+
 def on_message(client, userdata, message):
    print("Message Received from Others: "+message.payload.decode())
 
@@ -335,8 +348,10 @@ def run():
     client = connect_mqtt()
     client.subscribe(topic1, qos=1)
     client.subscribe(topic2, qos=1)
+    client.subscribe(topic3, qos=1)
     client.message_callback_add(topic1, on_message_from_lightintensity)
     client.message_callback_add(topic2, on_message_from_lightswitch)
+    client.message_callback_add(topic3, on_message_from_rfid)
     client.loop_start()
 
 def send_led_email_check(value):         # send email and increase the email counter to know there is an email sent
@@ -361,6 +376,13 @@ def update_email_status(value):
         return "Email has been sent. Lightbulb is OFF", light_bulb_off
     else:
         return "No email has been sent. Lightbulb is OFF", light_bulb_off
+
+            
+@app.callback(Output('rfid_h1', 'children'), Input('rfid-code-update', 'n_intervals'))  
+def update_output(value):
+    value = esp_rfid_message
+    return value
+
 
 if __name__ == '__main__':
 #     app.run_server(debug=True)

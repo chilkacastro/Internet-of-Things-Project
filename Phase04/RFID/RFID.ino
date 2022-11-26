@@ -11,9 +11,12 @@ MFRC522::MIFARE_Key key;
 //const char* ssid = "TP-Link_2AD8";
 //const char* password = "14730078";
 //const char* mqtt_server = "192.168.0.158";
-const char* ssid = "EBOX-9994";
-const char* password = "97479ec13d";
-const char* mqtt_server = "192.168.1.110";
+//const char* ssid = "EBOX-9994";
+//const char* password = "97479ec13d";
+//const char* mqtt_server = "192.168.1.110";
+const char* ssid = "VideotronHelix2.4";
+const char* password = "Margareta16";
+const char* mqtt_server = "10.0.0.218";
 WiFiClient vanieriot;
 PubSubClient client(vanieriot);
 

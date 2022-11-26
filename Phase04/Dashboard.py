@@ -71,10 +71,10 @@ GPIO.setup(Motor3,GPIO.IN)
 
 light_bulb_off="https://media.geeksforgeeks.org/wp-content/uploads/OFFbulb.jpg" 
 light_bulb_on="https://media.geeksforgeeks.org/wp-content/uploads/ONbulb.jpg"   
-#light_bulb_off ='assets/lightbulbOFF.png'         new source
+#light_bulb_off = 'assets/lightbulbOFF.png'         new source
 #light_bulb_on = 'assets/lightbulbON.png'          new source
-#fan_on = 'assets/fanON'                           new source
-#fan_off = 'assets/fanOFF2'                        new source
+#fan_on = 'assets/fanON.png'                           new source
+#fan_off = 'assets/fanOFF2.png'                        new source
 url="https://assets5.lottiefiles.com/packages/lf20_UdIDHC.json"
 options = dict(loop=True, autoplay=True, rendererSettings=dict(preserveAspectRatio='xMidYMid slice'))
 
@@ -254,7 +254,9 @@ def sendEmail():
             server.starttls(context=context)
             server.ehlo()  # Can be omitted
             server.login(sender_email, password)
-            server.sendmail(sender_email, receiver_email, message) 
+            server.sendmail(sender_email, receiver_email, message)
+
+# 
 # 
 # def is_fan_on():  
 #     if GPIO.input(Motor1) and not GPIO.input(Motor2) and GPIO.input(Motor3):
@@ -307,6 +309,26 @@ def sendLedStatusEmail():
              server.ehlo()  # Can be omitted
              server.login(sender_email, password)
              server.sendmail(sender_email, receiver_email, message)
+
+
+def sendUserEnteredEmail(user_name):
+        port = 587  # For starttls
+        smtp_server = "smtp-mail.outlook.com"
+        sender_email = "iotdashboard2022@outlook.com"
+        receiver_email = "iotdashboard2022@outlook.com"
+        password = 'iotpassword123'
+        subject = "Subject: USER ENTERED" 
+        current_time = datetime.now()
+        time = current_time.strftime("%H:%M")
+        body = user_name + " has entered at: " + time
+        message = subject + '\n\n' + body
+        context = ssl.create_default_context()
+        with smtplib.SMTP(smtp_server, port) as server:
+            server.ehlo()  # Can be omitted
+            server.starttls(context=context)
+            server.ehlo()  # Can be omitted
+            server.login(sender_email, password)
+            server.sendmail(sender_email, receiver_email, message) 
         
             
 @app.callback(Output('light-intensity', 'value'), Input('light-intensity-update', 'n_intervals'))  

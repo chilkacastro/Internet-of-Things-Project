@@ -18,29 +18,30 @@ connection = pymysql.connect(host='localhost',
                              cursorclass=pymysql.cursors.DictCursor)
 
 #CREATE THE TABLE (UNCOMMENT THIS FOR FIRST TIME CREATION)
-
+# 
 # with connection.cursor() as cursor:
 #     # Read a single record
 #     sql = """CREATE TABLE USER ( 
-#          id  VARCHAR(25) NOT NULL, 
+#          id VARCHAR(25) NOT NULL, 
 #          temp_threshold  DECIMAL,
 #          light_threshold DECIMAL,
 #          picture VARCHAR(100),
 #          CONSTRAINT iot_pk PRIMARY KEY (id)) """
 #     # To execute the SQL query
 #     cursor.execute(sql)   
-#   
+# 
 #     # To commit the changes
 #     connection.commit()         
 #     connection.close()
-# 
-# 
+
+
 #
 
 # INSERT YOUR CARD INFO
 with connection.cursor() as cursor:
     # Create a new record
-    sql = "INSERT INTO `USER` (`id`, `temp_threshold`, `light_threshold`, `picture`) VALUES ('2370f111', '21.0', '300.0', '/path/to/picture')"
+    sql = "INSERT INTO `USER` (`id`, `temp_threshold`, `light_threshold`, `picture`) VALUES ('33a168d', '21.0', '300.0', 'assets/stitch.jpg')"
+#     sql = "DELETE FROM USER WHERE id='33a168d'"
     cursor.execute(sql)
 
 # connection is not autocommit by default. So you must commit to save

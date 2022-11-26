@@ -38,13 +38,13 @@ esp_rfid_message = "RFID"
 user_id = "999NINENINE"
 temp_threshold = 0.0
 light_threshold = 0.0
-path_to_picture = "path/to/picture"
+path_to_picture = 'assets/minion.jpg'
 
 #------------PHASE03 VARIABLE CODES--------------
 # broker = '192.168.0.158' #ip in Lab class
 # broker = '192.168.76.10'
-#broker = '192.168.1.110' #chilka home
-broker = '10.0.0.218'
+broker = '192.168.1.110' #chilka home
+#broker = '10.0.0.218'
 # broker = '192.168.0.198'
 port = 1883
 topic1 = "esp/lightintensity"
@@ -83,10 +83,8 @@ GPIO.setup(Motor1,GPIO.IN)
 GPIO.setup(Motor2,GPIO.IN)
 GPIO.setup(Motor3,GPIO.IN)
 
-light_bulb_off="https://media.geeksforgeeks.org/wp-content/uploads/OFFbulb.jpg" 
-light_bulb_on="https://media.geeksforgeeks.org/wp-content/uploads/ONbulb.jpg"   
-#light_bulb_off = 'assets/lightbulbOFF.png'         new source
-#light_bulb_on = 'assets/lightbulbON.png'          new source
+light_bulb_off = 'assets/lightbulbOFF.png'        
+light_bulb_on = 'assets/lightbulbON.png'       
 #fan_on = 'assets/fanON.png'                           new source
 #fan_off = 'assets/fanOFF2.png'                        new source
 url="https://assets5.lottiefiles.com/packages/lf20_UdIDHC.json"
@@ -120,7 +118,7 @@ html_Button_Celcius_To_Fahrenheit =  html.Button('Fahrenheit', id='fahrenheit-bu
 
 # all fan related html
 html_Fan_Label = html.H6('Fan',style={'text-align':'center'})
-html_Div_Fan_Gif = html.Div([de.Lottie(options=options, width="25%", height="25%", url=url)], id='my-gif', style={'display':'none'})
+html_Div_Fan_Gif = html.Div([de.Lottie(options=options, width="25%", height="25%", url=url, id='lottie-gif', isStopped=True, isClickToPauseDisabled=True)], id='fan_display')
 html_Fan_Status_Message = html.H1(id='fan_status_message',style={'text-align':'center'})
 
 
@@ -129,7 +127,7 @@ html_Light_Intensity_Label =  html.H1('LightIntensity',style={'text-align':'cent
 daq_Led_Light_Intensity_LEDDisplay = daq.LEDDisplay(
                                         id='light-intensity',
                                         label="Light Intensity",
-                                        value = 0, size=64)
+                                        value = 0, size = 80)
 html_Led_Status_Message = html.H1(id='light_h1',style={'text-align':'center'})  #not used yet
 
 # intervals
@@ -176,44 +174,50 @@ rfid_Interval = dcc.Interval(
             interval = 1*20000,   
             n_intervals = 0)
 
+userinfo_Interval = dcc.Interval(
+            id = 'userinfo-update',
+            disabled=False,
+            interval = 1*2000,   
+            n_intervals = 0)
+
+
 sidebar = html.Div([
-    html.H3('User Profile', style={'text-align': 'center'}),
+    html.H3('User Profile', style={'text-align': 'center', 'margin-top': '20px'}),
     dbc.CardBody([
-            html.Img(src='assets/minion.jpg', style={'border-radius': '80px', 'width':'140px', 'height':'140px', 'object-fit': 'cover', 'display': 'block','margin-left':'auto','margin-right': 'auto'}),
-            html.H6("Username", style={'margin-top':'10px'}),
-            html.H4("Favorites: ", style={'margin-top':'40px'}),
-            html.H6("Humidity", style={'margin-left':'15px'}),
-            html.H6("Temperature", style={'margin-left':'15px'}),
-            html.H6("Light Intensity", style={'margin-left':'15px'})
+            html.Img(src=path_to_picture, id="picture_path", style={'border-radius': '80px', 'width':'140px', 'height':'140px', 'object-fit': 'cover', 'display': 'block','margin-left':'auto','margin-right': 'auto'}),
+            html.H6("Username:" + str(user_id), style={'margin-top':'30px'}, id="username_user_data"),
+            html.H4("Favorites ", style={'margin-top':'40px'}),
+            html.H6("Humidity: ", style={'margin-left':'15px'}, id="humidity_user_data"),
+            html.H6("Temperature: " + str(temp_threshold), style={'margin-left':'15px'}, id="temperature_user_data"),
+            html.H6("Light Intensity: " + str(light_threshold), style={'margin-left':'15px'}, id="lightintensity_user_data")
             ])
     ])
-# style={'border-style': 'solid'}
-# content = html.Div([
-#            dbc.Row([
-# #               dbc.Col(dbc.Row([daq_Gauge, daq_Thermometer, html_Button_Celcius_To_Fahrenheit,html_Fan_Label, html_Div_Fan_Gif, html_Fan_Status_Message]), width=7),
-#                 dbc.Col(dbc.Row([daq_Gauge, daq_Thermometer, html_Div_Fan_Gif, html_Fan_Status_Message]), width=5),
-#         #                             dbc.Col(dbc.Row([html_Light_Intensity_Label, html_Led_Status_Message])),
-#                 dbc.Col(dbc.Row([daq_Led_Light_Intensity_LEDDisplay, html.Img(id="light-bulb", src=light_bulb_off,
-#                     style={'width':'100px', 'height':'100px', 'display': 'block','margin-left':'auto','margin-right': 'auto', 'margin-top':'10px'}),
-#                     html.H5(id='email_h1',style ={"text-align":"center"})]), width=4, className="border border-secondary"),
-#                 fan_Status_Message_Interval, humidity_Interval, temperature_Interval, light_Intensity_Interval, led_On_Email_Interval
-#              ]), #inner Row
-#         ])
-card_content1 = dbc.Col(dbc.Row([daq_Gauge, daq_Thermometer, html_Div_Fan_Gif, html_Fan_Status_Message]))
+
+card_content1 = dbc.Col(dbc.Row([
+                                dbc.Card(dbc.Col(daq_Gauge), color="secondary", inverse=True, style={"width": "24.87rem", 'height': "20rem"}),
+                                dbc.Card(dbc.Col(daq_Thermometer), color="secondary", inverse=True, style={"width": "20rem", 'height': "20rem"}),
+#                                 html_Button_Celcius_To_Fahrenheit,
+                                dbc.Card(html.Div([html_Div_Fan_Gif, html_Fan_Status_Message]), color="secondary", inverse=True, style={"width": "44.87rem", 'height': 'auto'})
+                                ]))
 card_content2 = dbc.Col(
-                    dbc.Row([daq_Led_Light_Intensity_LEDDisplay, html.Img(id="light-bulb", src=light_bulb_off,
-                    style={'width':'100px', 'height':'100px', 'display': 'block','margin-left':'auto','margin-right': 'auto', 'margin-top':'10px'}),
-                    html.H5(id='email_h1',style ={"text-align":"center"}), html.H5(id='rfid_h1',style ={"text-align":"center"})]))
+                    dbc.Row([
+                             dbc.Card(
+                                 html.Div([
+                                     daq_Led_Light_Intensity_LEDDisplay,
+                                     html.Img(id="light-bulb", src=light_bulb_off, style={'width':'150px', 'height': '200px', 'display': 'block','margin-left':'auto','margin-right': 'auto', 'margin-top':'10px'}),
+                                     html.H5(id='email_heading',style ={"text-align":"center"}) ]),
+                                 color="secondary", inverse=True, style={"width": "30rem", 'height': "30rem"}),
+                             
+                             html.H5(id='rfid_heading',style ={"text-align":"center"})]))
+
 content = html.Div([
            dbc.Row([
-#               dbc.Col(dbc.Row([daq_Gauge, daq_Thermometer, html_Button_Celcius_To_Fahrenheit,html_Fan_Label, html_Div_Fan_Gif, html_Fan_Status_Message]), width=7),
-                dbc.Card(card_content1, color="secondary", inverse=True, style={"width": "45rem", 'height': "80rem"}),
+                dbc.Card(card_content1, color="secondary", inverse=True, style={"width": "45rem", 'height': "100vh"}),
         #                             dbc.Col(dbc.Row([html_Light_Intensity_Label, html_Led_Status_Message])),
-                dbc.Card(card_content2, color="secondary", inverse=True, style={"width": "50rem", 'height': "80rem"}),
-                fan_Status_Message_Interval, humidity_Interval, temperature_Interval, light_Intensity_Interval, led_On_Email_Interval, rfid_Interval
+                card_content2,
+                fan_Status_Message_Interval, humidity_Interval, temperature_Interval, light_Intensity_Interval, led_On_Email_Interval, rfid_Interval, userinfo_Interval 
              ]), #inner Row
         ])
-
 
 app.layout = dbc.Container([
                 dbc.Row(navbar),
@@ -270,32 +274,42 @@ def sendEmail():
             server.login(sender_email, password)
             server.sendmail(sender_email, receiver_email, message)
 
-# 
-# 
-# def is_fan_on():  
-#     if GPIO.input(Motor1) and not GPIO.input(Motor2) and GPIO.input(Motor3):
-#         return True
-#     else:
-#         return False
-# 
-# @app.callback(Output('my-fan-1', 'value'), Input('fan-update', 'n_intervals'))
-# def update_output(value):
-#     fan_status_checker = is_fan_on()
-# #     print(fan_status_checker)
-#     return True if fan_status_checker else False
-#         # return True if GPIO.input(Motor1) and not GPIO.input(Motor2) and GPIO.input(Motor3) else False
-# 
 
-# @app.callback([Output('fan_status_message', 'children'), Output('my-gif', 'style')],Input('fan_status_message_update', 'n_intervals'))
-# def update_h1(n):
-#     fan_status_checker = is_fan_on()
-#     
-#     if fan_status_checker:
-#         return "Status: On", {'display':'block'}
-#     
-#     else:
-#         return "Status: Off",{'display':'none'}
-#     
+def is_fan_on():  
+    if GPIO.input(Motor1) and not GPIO.input(Motor2) and GPIO.input(Motor3):
+        return True
+    else:
+        return False
+
+@app.callback(Output('my-fan-1', 'value'), Input('fan-update', 'n_intervals'))
+def update_output(value):
+    fan_status_checker = is_fan_on()
+#     print(fan_status_checker)
+    return True if fan_status_checker else False
+        # return True if GPIO.input(Motor1) and not GPIO.input(Motor2) and GPIO.input(Motor3) else False
+
+@app.callback([Output('fan_status_message', 'children'), Output('lottie-gif', 'isStopped')],
+              Input('fan_status_message_update', 'n_intervals'))
+def update_h1(n):
+    fan_status_checker = is_fan_on()
+    
+    if fan_status_checker:
+        return "Status: On", False
+    
+    else:
+        return "Status: Off", True
+    
+@app.callback([Output('username_user_data', 'children'),
+#                Output('humidity_user_data', 'children'),
+               Output('temperature_user_data', 'children'),
+               Output('lightintensity_user_data', 'children'),
+               Output('picture_path', 'src')],
+               Input('userinfo-update', 'n_intervals'))
+def update_user_information(n):
+    return "Username: " + str(user_id) , "Temperature: " +  str(temp_threshold), "Light Intensity: " + str(light_threshold), path_to_picture
+    
+    
+    
 #CONVERSION NOT YET DONE
 # @app.callback([Output('my-thermometer-1', 'value')] ,
 #               [Input('temp-update', 'n_intervals'),
@@ -413,6 +427,7 @@ def get_from_database(rfid):
         global path_to_picture
         path_to_picture = user_info['picture']
     print(str(user_id) + " " + str(temp_threshold) + " " + str(light_threshold) + " " + path_to_picture)
+    
 def run():
     client = connect_mqtt()
     client.subscribe(topic1, qos=1)
@@ -432,7 +447,7 @@ def send_led_email_check(value):         # send email and increase the email cou
          email_counter += 1
 
 #printing
-@app.callback([Output('email_h1', 'children'), Output('light-bulb', 'src')], Input('led-email-status-update', 'n_intervals'))       # update email sent message
+@app.callback([Output('email_heading', 'children'), Output('light-bulb', 'src')], Input('led-email-status-update', 'n_intervals'))       # update email sent message
 def update_email_status(value):
     lightvalue = esp_message
     value = esp_lightswitch_message
@@ -448,14 +463,14 @@ def update_email_status(value):
         return "No email has been sent. Lightbulb is OFF", light_bulb_off
 
             
-@app.callback(Output('rfid_h1', 'children'), Input('rfid-code-update', 'n_intervals'))  
+@app.callback(Output('rfid_heading', 'children'), Input('rfid-code-update', 'n_intervals'))  
 def update_output(value):
     value = esp_rfid_message
     return value
 
 
 if __name__ == '__main__':
-#     app.run_server(debug=True)
+   # app.run_server(debug=True)
     app.run_server(debug=False,dev_tools_ui=False,dev_tools_props_check=False)
 
 

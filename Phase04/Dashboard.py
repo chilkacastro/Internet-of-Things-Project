@@ -1,3 +1,4 @@
+import logging
 import os
 from dash import Dash, html, dcc, Input, Output, State
 from dash_bootstrap_templates import ThemeChangerAIO, template_from_url
@@ -14,6 +15,11 @@ import smtplib, ssl, getpass, imaplib, email
 import random
 from paho.mqtt import client as mqtt_client
 from datetime import datetime
+import pymysql
+import pymysql.cursors
+
+#removes the post update component in the terminal
+logging.getLogger('werkzeug').setLevel(logging.ERROR)
 
 app = Dash(__name__)
 theme_change = ThemeChangerAIO(aio_id="theme", radio_props={"persistence": True}, button_props={"color": "danger","children": "Change Theme"})
@@ -27,10 +33,18 @@ navbar = dbc.NavbarSimple(
     sticky="top"
 )
 
+#------------thresholds and user info-----
+esp_rfid_message = "RFID"
+user_id = "999NINENINE"
+temp_threshold = 0.0
+light_threshold = 0.0
+path_to_picture = "path/to/picture"
+
 #------------PHASE03 VARIABLE CODES--------------
 # broker = '192.168.0.158' #ip in Lab class
 # broker = '192.168.76.10'
-broker = '192.168.1.110' #chilka home
+#broker = '192.168.1.110' #chilka home
+broker = '10.0.0.218'
 # broker = '192.168.0.198'
 port = 1883
 topic1 = "esp/lightintensity"
@@ -41,7 +55,7 @@ client_id = f'python-mqtt-{random.randint(0, 100)}'
 # username = 'emqx'
 # password = 'public'
 esp_message = 0
-esp_rfid_message = "RFID"
+
 esp_lightswitch_message = "OFF"
 GPIO.setmode(GPIO.BOARD)
 GPIO.setwarnings(False)
@@ -159,7 +173,7 @@ led_On_Email_Interval = dcc.Interval(
 rfid_Interval = dcc.Interval(
             id = 'rfid-code-update',
             disabled=False,
-            interval = 1*10000,   
+            interval = 1*20000,   
             n_intervals = 0)
 
 sidebar = html.Div([
@@ -333,7 +347,7 @@ def sendUserEnteredEmail(user_name):
             
 @app.callback(Output('light-intensity', 'value'), Input('light-intensity-update', 'n_intervals'))  
 def update_output(value):
-    run()
+    
     # print("Here: ", esp_message) UNCOMMENT TO SEE THE VALUE PASSED FROM THE PUBLISHER 
     value = esp_message
     return value
@@ -367,10 +381,38 @@ def on_message_from_rfid(client, userdata, message):
    esp_rfid_message = message.payload.decode()
    print("Message Received from rfid: ")
    print(esp_rfid_message)
+   get_from_database(esp_rfid_message)
 
 def on_message(client, userdata, message):
    print("Message Received from Others: "+message.payload.decode())
-
+   
+   
+def get_from_database(rfid):
+    #Connect to the database
+    connection = pymysql.connect(host='localhost',
+                             user='root',
+                             password='root',
+                             database='IOT',
+                             charset='utf8mb4',
+                             cursorclass=pymysql.cursors.DictCursor)
+    with connection.cursor(pymysql.cursors.DictCursor) as cursor:
+    # Read a single record
+        sql = "SELECT * FROM USER WHERE id = %s"
+        # To execute the SQL query
+        cursor.execute(sql, (rfid))
+        user_info = cursor.fetchone()
+    print("Result from database select: ")
+    print(user_info)
+    if(user_info):
+        global user_id
+        user_id = user_info['id']
+        global temp_threshold
+        temp_threshold = user_info['temp_threshold']
+        global light_threshold
+        light_threshold = user_info['light_threshold']
+        global path_to_picture
+        path_to_picture = user_info['picture']
+    print(str(user_id) + " " + str(temp_threshold) + " " + str(light_threshold) + " " + path_to_picture)
 def run():
     client = connect_mqtt()
     client.subscribe(topic1, qos=1)
@@ -380,7 +422,8 @@ def run():
     client.message_callback_add(topic2, on_message_from_lightswitch)
     client.message_callback_add(topic3, on_message_from_rfid)
     client.loop_start()
-
+    
+run()
 def send_led_email_check(value):         # send email and increase the email counter to know there is an email sent
       global email_counter
       if value.__eq__("ON") and email_counter == 0:

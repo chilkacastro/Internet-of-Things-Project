@@ -1,3 +1,4 @@
+import os
 from dash import Dash, html, dcc, Input, Output, State
 from dash_bootstrap_templates import ThemeChangerAIO, template_from_url
 import dash_bootstrap_components as dbc
@@ -68,8 +69,12 @@ GPIO.setup(Motor1,GPIO.IN)
 GPIO.setup(Motor2,GPIO.IN)
 GPIO.setup(Motor3,GPIO.IN)
 
-light_bulb_off="https://media.geeksforgeeks.org/wp-content/uploads/OFFbulb.jpg"
-light_bulb_on="https://media.geeksforgeeks.org/wp-content/uploads/ONbulb.jpg"
+light_bulb_off="https://media.geeksforgeeks.org/wp-content/uploads/OFFbulb.jpg" 
+light_bulb_on="https://media.geeksforgeeks.org/wp-content/uploads/ONbulb.jpg"   
+#light_bulb_off ='assets/lightbulbOFF.png'         new source
+#light_bulb_on = 'assets/lightbulbON.png'          new source
+#fan_on = 'assets/fanON'                           new source
+#fan_off = 'assets/fanOFF2'                        new source
 url="https://assets5.lottiefiles.com/packages/lf20_UdIDHC.json"
 options = dict(loop=True, autoplay=True, rendererSettings=dict(preserveAspectRatio='xMidYMid slice'))
 

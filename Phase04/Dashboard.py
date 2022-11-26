@@ -7,6 +7,7 @@ import dash_extensions as de
 import dash_daq as daq
 import RPi.GPIO as GPIO
 import base64
+import bluetooth
 from PIL import Image       # use and download PILLOW for it to work  https://pillow.readthedocs.io/en/stable/installation.html
 import time
 from time import sleep
@@ -473,5 +474,7 @@ if __name__ == '__main__':
    # app.run_server(debug=True)
     app.run_server(debug=False,dev_tools_ui=False,dev_tools_props_check=False)
 
-
+def scanNumberOfBluetoothDevices():
+    nearby_devices = bluetooth.discover_devices(duration=8, lookup_names=True,flush_cache=True, lookup_class=False)
+    return len(nearby_devices)
         

@@ -42,11 +42,11 @@ light_threshold = 0.0
 path_to_picture = 'assets/minion.jpg'
 
 #------------PHASE03 VARIABLE CODES--------------
-# broker = '192.168.0.158' #ip in Lab class
+broker = '192.168.0.158' #ip in Lab class
 # broker = '192.168.76.10'
-broker = '192.168.1.110' #chilka home
+#broker = '192.168.1.110' #chilka home
 #broker = '10.0.0.218'
-# broker = '192.168.0.198'
+#broker = '192.168.208.198'
 port = 1883
 topic1 = "esp/lightintensity"
 topic2 = "esp/lightswitch"
@@ -181,6 +181,12 @@ userinfo_Interval = dcc.Interval(
             interval = 1*2000,   
             n_intervals = 0)
 
+bluetooth_Interval = dcc.Interval(
+            id = 'bluetooth-update',
+            disabled=False,
+            interval = 1*2000,   
+            n_intervals = 0)
+
 
 sidebar = html.Div([
     html.H3('User Profile', style={'text-align': 'center', 'margin-top': '20px'}),
@@ -209,14 +215,14 @@ card_content2 = dbc.Col(
                                      html.H5(id='email_heading',style ={"text-align":"center"}) ]),
                                  color="secondary", inverse=True, style={"width": "30rem", 'height': "30rem"}),
                              
-                             html.H5(id='rfid_heading',style ={"text-align":"center"})]))
+                             dbc.Card(html.H5("Number of Bluetooth Devices: ", id='bluetooth_heading',style ={"text-align":"center"}), color="secondary", inverse=True, style={"width": "30rem", 'height': "30rem"})]))
 
 content = html.Div([
            dbc.Row([
                 dbc.Card(card_content1, color="secondary", inverse=True, style={"width": "45rem", 'height': "100vh"}),
         #                             dbc.Col(dbc.Row([html_Light_Intensity_Label, html_Led_Status_Message])),
                 card_content2,
-                fan_Status_Message_Interval, humidity_Interval, temperature_Interval, light_Intensity_Interval, led_On_Email_Interval, rfid_Interval, userinfo_Interval 
+                fan_Status_Message_Interval, humidity_Interval, temperature_Interval, light_Intensity_Interval, led_On_Email_Interval, rfid_Interval, userinfo_Interval, bluetooth_Interval 
              ]), #inner Row
         ])
 
@@ -427,6 +433,7 @@ def get_from_database(rfid):
         light_threshold = user_info['light_threshold']
         global path_to_picture
         path_to_picture = user_info['picture']
+        sendUserEnteredEmail(str(user_id))
     print(str(user_id) + " " + str(temp_threshold) + " " + str(light_threshold) + " " + path_to_picture)
     
 def run():
@@ -469,12 +476,16 @@ def update_output(value):
     value = esp_rfid_message
     return value
 
-
-if __name__ == '__main__':
-   # app.run_server(debug=True)
-    app.run_server(debug=False,dev_tools_ui=False,dev_tools_props_check=False)
+@app.callback(Output('bluetooth_heading', 'children'), Input('bluetooth-update', 'n_intervals'))
+def update_bluetooth(value):
+    return "Number of Bluetooth devices: " + str(scanNumberOfBluetoothDevices())
 
 def scanNumberOfBluetoothDevices():
     nearby_devices = bluetooth.discover_devices(duration=8, lookup_names=True,flush_cache=True, lookup_class=False)
     return len(nearby_devices)
         
+
+if __name__ == '__main__':
+   # app.run_server(debug=True)
+    app.run_server(debug=False,dev_tools_ui=False,dev_tools_props_check=False)
+

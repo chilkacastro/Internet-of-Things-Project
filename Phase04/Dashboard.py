@@ -22,7 +22,12 @@ import pymysql.cursors
 #removes the post update component in the terminal
 logging.getLogger('werkzeug').setLevel(logging.ERROR)
 
-app = Dash(__name__)
+app = Dash(__name__,  meta_tags=[
+        {
+            "name": "viewport",
+            "content": "width=device-width, initial-scale=1.0",
+        }
+    ])
 theme_change = ThemeChangerAIO(aio_id="theme", radio_props={"persistence": True}, button_props={"color": "danger","children": "Change Theme"})
 navbar = dbc.NavbarSimple(
     children=[
@@ -42,9 +47,9 @@ light_threshold = 0.0
 path_to_picture = 'assets/minion.jpg'
 
 #------------PHASE03 VARIABLE CODES--------------
-broker = '192.168.0.158' #ip in Lab class
+#broker = '192.168.0.158' #ip in Lab class
 # broker = '192.168.76.10'
-#broker = '192.168.1.110' #chilka home
+broker = '192.168.1.110' #chilka home
 #broker = '10.0.0.218'
 #broker = '192.168.208.198'
 port = 1883
@@ -90,7 +95,7 @@ light_bulb_on = 'assets/lightbulbON.png'
 #fan_off = 'assets/fanOFF2.png'                        new source
 url="https://assets5.lottiefiles.com/packages/lf20_UdIDHC.json"
 options = dict(loop=True, autoplay=True, rendererSettings=dict(preserveAspectRatio='xMidYMid slice'))
-
+url2 = "https://assets8.lottiefiles.com/packages/lf20_ylvmhzmx.json"
 # -----------------------------------------------
 #Components
 
@@ -109,26 +114,36 @@ daq_Thermometer = daq.Thermometer(
                         id='my-thermometer-1',
                         min=-40,
                         value = 18,
-                        max=160,
-                        scale={'start': -40, 'interval': 25},
-                        label="Temperature(Celsius)",
+                        max=50,
+                        scale={'start': -40, 'interval': 10},
+                        label="Temperature",
                         showCurrentValue=True,
+                        height=150,
                         units="C",
                         color="red")
-html_Button_Celcius_To_Fahrenheit =  html.Button('Fahrenheit', id='fahrenheit-button', n_clicks=0, style={'width':'20%'})
+daq_Fahrenheit_ToggleSwitch = daq.ToggleSwitch(
+        id='fahrenheit-switch',
+        label='Fahrenheit',
+        labelPosition='bottom',
+        value=False
+    )
 
 # all fan related html
 html_Fan_Label = html.H6('Fan',style={'text-align':'center'})
-html_Div_Fan_Gif = html.Div([de.Lottie(options=options, width="25%", height="25%", url=url, id='lottie-gif', isStopped=True, isClickToPauseDisabled=True)], id='fan_display')
-html_Fan_Status_Message = html.H1(id='fan_status_message',style={'text-align':'center'})
+html_Div_Fan_Gif = html.Div([de.Lottie(options=options, width="40%", height="25%", url=url, id='lottie-gif', isStopped=True, isClickToPauseDisabled=True)], id='fan_display')
+html_Bluetooth_Gif = html.Div([de.Lottie(options=options, width="40%", height="25%", url=url2, isClickToPauseDisabled=True)])
+html_Fan_Status_Message = html.H5(id='fan_status_message',style={'text-align':'center'})
 
 
 # all related to light intensity and led
-html_Light_Intensity_Label =  html.H1('LightIntensity',style={'text-align':'center'})
+html_Light_Intensity_Label =  html.H6('Light Intensity',style={'text-align':'center'})
+html_bluetooth_Label =  html.H6('Bluetooth Devices',style={'text-align':'center'})
 daq_Led_Light_Intensity_LEDDisplay = daq.LEDDisplay(
                                         id='light-intensity',
-                                        label="Light Intensity",
-                                        value = 0, size = 80)
+                                        label="Light Intensity Value",
+                                        labelPosition='bottom',
+                                        value = 0,
+                                        size = 50)
 html_Led_Status_Message = html.H1(id='light_h1',style={'text-align':'center'})  #not used yet
 
 # intervals
@@ -186,44 +201,72 @@ bluetooth_Interval = dcc.Interval(
             disabled=False,
             interval = 1*2000,   
             n_intervals = 0)
+fahrenheit_Interval = dcc.Interval(
+            id = 'fahrenheit-update',
+            disabled=False,
+            interval = 1*2000,   
+            n_intervals = 0)
 
-
+fan_Label = html.H6("Electric Fan", style={'text-align': 'center'});
 sidebar = html.Div([
     html.H3('User Profile', style={'text-align': 'center', 'margin-top': '20px'}),
     dbc.CardBody([
             html.Img(src=path_to_picture, id="picture_path", style={'border-radius': '80px', 'width':'140px', 'height':'140px', 'object-fit': 'cover', 'display': 'block','margin-left':'auto','margin-right': 'auto'}),
             html.H6("Username:" + str(user_id), style={'margin-top':'30px'}, id="username_user_data"),
             html.H4("Favorites ", style={'margin-top':'40px'}),
-            html.H6("Humidity: ", style={'margin-left':'15px'}, id="humidity_user_data"),
+           # html.H6("Humidity: ", style={'margin-left':'15px'}, id="humidity_user_data"),
             html.H6("Temperature: " + str(temp_threshold), style={'margin-left':'15px'}, id="temperature_user_data"),
             html.H6("Light Intensity: " + str(light_threshold), style={'margin-left':'15px'}, id="lightintensity_user_data")
             ])
     ])
 
-card_content1 = dbc.Col(dbc.Row([
-                                dbc.Card(dbc.Col(daq_Gauge), color="secondary", inverse=True, style={"width": "24.87rem", 'height': "20rem"}),
-                                dbc.Card(dbc.Col(daq_Thermometer), color="secondary", inverse=True, style={"width": "20rem", 'height': "20rem"}),
-#                                 html_Button_Celcius_To_Fahrenheit,
-                                dbc.Card(html.Div([html_Div_Fan_Gif, html_Fan_Status_Message]), color="secondary", inverse=True, style={"width": "44.87rem", 'height': 'auto'})
-                                ]))
-card_content2 = dbc.Col(
-                    dbc.Row([
-                             dbc.Card(
-                                 html.Div([
-                                     daq_Led_Light_Intensity_LEDDisplay,
-                                     html.Img(id="light-bulb", src=light_bulb_off, style={'width':'150px', 'height': '200px', 'display': 'block','margin-left':'auto','margin-right': 'auto', 'margin-top':'10px'}),
-                                     html.H5(id='email_heading',style ={"text-align":"center"}) ]),
-                                 color="secondary", inverse=True, style={"width": "30rem", 'height': "30rem"}),
-                             
-                             dbc.Card(html.H5("Number of Bluetooth Devices: ", id='bluetooth_heading',style ={"text-align":"center"}), color="secondary", inverse=True, style={"width": "30rem", 'height': "30rem"})]))
+card_content1 = dbc.Container(
+    [
+        dbc.Row(
+            [
+                dbc.Col(
+                    html.H1(
+                        html.B("SMART HOME COMPONENTS"),
+                        className="text-center mt-4 mb-5",
+                    )
+                )
+            ]
+        ),
+        dbc.Row([
+            dbc.Col(dbc.Card(dbc.Col(daq_Gauge), color="secondary", inverse=True, style={"width": "30rem", 'height': "22rem"}), width="auto"),
+            dbc.Col(dbc.Card(dbc.Col(html.Div([daq_Thermometer, daq_Fahrenheit_ToggleSwitch])), color="secondary", inverse=True, style={"width": "30rem", 'height': "22rem"}), width="auto"),
+            dbc.Col(dbc.Card(dbc.Col(html.Div([fan_Label, html_Div_Fan_Gif, html_Fan_Status_Message])), color="secondary", inverse=True, style={"width": "30rem", 'height': "22rem"}), width="auto")],
+            justify="center",
+        ),
+        dbc.Row([
+            dbc.Col(dbc.Card(
+                     html.Div([
+                         html_Light_Intensity_Label,
+                         html.Img(id="light-bulb", src=light_bulb_off,
+                                  style={'width':'80px', 'height': '110px',
+                                  'display': 'block','margin-left':'auto','margin-right': 'auto', 'margin-top':'10px'}),
+                         daq_Led_Light_Intensity_LEDDisplay,
+                         html.H5(id='email_heading',style ={"text-align":"center"}) ]),
+                     color="secondary", inverse=True, style={"width": "30rem", 'height': "22rem"}), width="auto"),
+            dbc.Col(dbc.Card(
+                html.Div([
+                    html_bluetooth_Label,
+                    html_Bluetooth_Gif,
+                    html.H5("Number of Bluetooth Devices: ",
+                            id='bluetooth_heading',style ={"text-align":"center", 'margin-top':'10px'})
+                ]),
+                color="secondary", inverse=True, style={"width": "30rem", 'height': "22rem"}), width="auto")],
+            justify="center",
+        className="mt-5"),
+    ],
+    fluid=True,)
+
 
 content = html.Div([
            dbc.Row([
-                dbc.Card(card_content1, color="secondary", inverse=True, style={"width": "45rem", 'height': "100vh"}),
-        #                             dbc.Col(dbc.Row([html_Light_Intensity_Label, html_Led_Status_Message])),
-                card_content2,
-                fan_Status_Message_Interval, humidity_Interval, temperature_Interval, light_Intensity_Interval, led_On_Email_Interval, rfid_Interval, userinfo_Interval, bluetooth_Interval 
-             ]), #inner Row
+                card_content1,
+                fan_Status_Message_Interval, humidity_Interval, temperature_Interval, light_Intensity_Interval, led_On_Email_Interval, rfid_Interval, userinfo_Interval, bluetooth_Interval, fahrenheit_Interval 
+             ]),
         ])
 
 app.layout = dbc.Container([
@@ -315,7 +358,21 @@ def update_h1(n):
 def update_user_information(n):
     return "Username: " + str(user_id) , "Temperature: " +  str(temp_threshold), "Light Intensity: " + str(light_threshold), path_to_picture
     
-    
+@app.callback(
+    [Output('my-thermometer-1', 'value'),
+     Output('my-thermometer-1', 'min'),
+     Output('my-thermometer-1', 'max'),
+     Output('my-thermometer-1', 'scale'),
+     Output('my-thermometer-1', 'units')],
+    [Input('fahrenheit-switch', 'value'),
+    Input('my-thermometer-1', 'value'),
+    Input('fahrenheit-update', 'n_clicks')]
+)
+def update_output(switch_state, temp_value, n_clicks):
+    if switch_state:
+        return (18 * 1.8) + 32, 40, 120, {'start': 40, 'interval': 10}, 'F'  #replace 18 with temperature later
+    else:
+        return 18, -40, 50, {'start': -40, 'interval': 10}, 'C'
     
 #CONVERSION NOT YET DONE
 # @app.callback([Output('my-thermometer-1', 'value')] ,

@@ -49,9 +49,10 @@ path_to_picture = 'assets/minion.jpg'
 #------------PHASE03 VARIABLE CODES--------------
 #broker = '192.168.0.158' #ip in Lab class
 # broker = '192.168.76.10'
-broker = '192.168.1.110' #chilka home
+#broker = '192.168.1.110' #chilka home
 #broker = '10.0.0.218'
 #broker = '192.168.208.198'
+broker = "192.168.225.198"
 port = 1883
 topic1 = "esp/lightintensity"
 topic2 = "esp/lightswitch"
@@ -187,7 +188,7 @@ led_On_Email_Interval = dcc.Interval(
 rfid_Interval = dcc.Interval(
             id = 'rfid-code-update',
             disabled=False,
-            interval = 1*20000,   
+            interval = 1*8000,   
             n_intervals = 0)
 
 userinfo_Interval = dcc.Interval(
@@ -227,7 +228,7 @@ card_content1 = dbc.Container(
                 dbc.Col(
                     html.H1(
                         html.B("SMART HOME COMPONENTS"),
-                        className="text-center mt-4 mb-5",
+                        className="text-center mt-4 mb-2",
                     )
                 )
             ]
@@ -425,7 +426,7 @@ def sendUserEnteredEmail(user_name):
             
 @app.callback(Output('light-intensity', 'value'), Input('light-intensity-update', 'n_intervals'))  
 def update_output(value):
-    
+    run()
     # print("Here: ", esp_message) UNCOMMENT TO SEE THE VALUE PASSED FROM THE PUBLISHER 
     value = esp_message
     return value
@@ -503,7 +504,7 @@ def run():
     client.message_callback_add(topic3, on_message_from_rfid)
     client.loop_start()
     
-run()
+# run()
 def send_led_email_check(value):         # send email and increase the email counter to know there is an email sent
       global email_counter
       if value.__eq__("ON") and email_counter == 0:
@@ -530,7 +531,10 @@ def update_email_status(value):
             
 @app.callback(Output('rfid_heading', 'children'), Input('rfid-code-update', 'n_intervals'))  
 def update_output(value):
+    run()
     value = esp_rfid_message
+    sendUserEnteredEmail(esp_rfid_message)
+    #get_from_database(esp_rfid)
     return value
 
 @app.callback(Output('bluetooth_heading', 'children'), Input('bluetooth-update', 'n_intervals'))

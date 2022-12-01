@@ -8,9 +8,12 @@
 MFRC522 rfid(SS_PIN, RST_PIN); // Instance of the class
 MFRC522::MIFARE_Key key;
 //
-const char* ssid = "TP-Link_2AD8";
-const char* password = "14730078";
-const char* mqtt_server = "192.168.0.158";
+//const char* ssid = "TP-Link_2AD8";
+//const char* password = "14730078";
+//const char* mqtt_server = "192.168.0.158";
+const char* ssid = "Samad-Mobile";
+const char* password = "12356789";
+const char* mqtt_server = "192.168.225.198";
 //const char* ssid = "EBOX-9994";
 //const char* password = "97479ec13d";
 //const char* mqtt_server = "192.168.1.110";
@@ -73,10 +76,10 @@ void loop() {
     Serial.println(F("Your tag is not of type MIFARE Classic."));
     return;
   }
-  if (rfid.uid.uidByte[0] != nuidPICC[0] ||
-      rfid.uid.uidByte[1] != nuidPICC[1] ||
-      rfid.uid.uidByte[2] != nuidPICC[2] ||
-      rfid.uid.uidByte[3] != nuidPICC[3] ) {
+//  if (rfid.uid.uidByte[0] != nuidPICC[0] ||
+//      rfid.uid.uidByte[1] != nuidPICC[1] ||
+//      rfid.uid.uidByte[2] != nuidPICC[2] ||
+//      rfid.uid.uidByte[3] != nuidPICC[3] ) {
     Serial.println(F("A new card has been detected."));
     // Store NUID into nuidPICC array
     for (byte i = 0; i < 4; i++) {
@@ -90,8 +93,8 @@ void loop() {
 //    Serial.print(F("In dec: "));
 //    printDec(rfid.uid.uidByte, rfid.uid.size);
 //    Serial.println();
-  }
-  else Serial.println(F("Card read previously."));
+//  }
+//else Serial.println(F("Card read previously."));
   // Halt PICC
   rfid.PICC_HaltA();
   // Stop encryption on PCD

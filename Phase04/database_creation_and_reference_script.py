@@ -40,7 +40,8 @@ connection = pymysql.connect(host='localhost',
 # INSERT YOUR CARD INFO
 with connection.cursor() as cursor:
     # Create a new record
-    sql = "INSERT INTO `USER` (`id`, `temp_threshold`, `light_threshold`, `picture`) VALUES ('33a168d', '21.0', '300.0', 'assets/stitch.jpg')"
+    sql = "INSERT INTO `USER` (`id`, `temp_threshold`, `light_threshold`, `picture`) VALUES ('f37d2813', '23.5', '500.0', 'assets/dory.jpg')"
+    
 #     sql = "DELETE FROM USER WHERE id='33a168d'"
     cursor.execute(sql)
 

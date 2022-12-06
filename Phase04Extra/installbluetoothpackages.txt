@@ -1,6 +1,0 @@
-Install the required bluetooth packages to make everything work (worked for me):
-
-sudo apt-get install bluez   // you should have that, it was shown to us
-sudo apt-get install bluez libbluetooth-dev         // need the libbluetooth-dev package that can be installed with bluez or bluetooth (same package used by both)
-sudo apt-get install bluetooth libbluetooth-dev     // once again it will see that libbluetooth-dev has been installed but will install some supplementary stuff from the bluetooth lib
-pip install pybluez             // install pybluez to be able to run code in python and scan for bluetooth devices, etc.

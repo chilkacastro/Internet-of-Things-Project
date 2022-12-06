@@ -1,5 +1,6 @@
 import logging
 import os
+import subprocess
 from dash import Dash, html, dcc, Input, Output, State
 from dash_bootstrap_templates import ThemeChangerAIO, template_from_url
 import dash_bootstrap_components as dbc
@@ -541,9 +542,17 @@ def update_output(value):
 def update_bluetooth(value):
     return "Number of Bluetooth devices: " + str(scanNumberOfBluetoothDevices())
 
+def enableBluetooth():
+    os.system("bluetooth scan on")
+
 def scanNumberOfBluetoothDevices():
-    nearby_devices = bluetooth.discover_devices(duration=8, lookup_names=True,flush_cache=True, lookup_class=False)
-    return len(nearby_devices)
+    number_of_devices = 0
+    output = subprocess.check_output(['bluetoothctl', 'devices'])
+    for word in output.split():
+        if word == b'Device':
+            number_of_devices += 1
+    
+    return number_of_devices
         
 
 if __name__ == '__main__':

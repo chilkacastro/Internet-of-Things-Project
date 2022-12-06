@@ -11,12 +11,12 @@ MFRC522::MIFARE_Key key;
 //const char* ssid = "TP-Link_2AD8";
 //const char* password = "14730078";
 //const char* mqtt_server = "192.168.0.158";
-const char* ssid = "Samad-Mobile";
-const char* password = "12356789";
-const char* mqtt_server = "192.168.225.198";
-//const char* ssid = "EBOX-9994";
-//const char* password = "97479ec13d";
-//const char* mqtt_server = "192.168.1.110";
+//const char* ssid = "Samad-Mobile";
+//const char* password = "12356789";
+//const char* mqtt_server = "192.168.225.198";
+const char* ssid = "EBOX-9994";
+const char* password = "97479ec13d";
+const char* mqtt_server = "192.168.1.110";
 //const char* ssid = "VideotronHelix2.4";
 //const char* password = "Margareta16";
 //const char* mqtt_server = "10.0.0.218";
@@ -26,6 +26,12 @@ const char* mqtt_server = "192.168.225.198";
 WiFiClient vanieriot;
 PubSubClient client(vanieriot);
 
+// light setup
+const int pResistor = A0;
+//const int ledPin = 5; // equivalent D0
+// Variables
+int value;
+//char* ledStatus = "OFF";
 
 // Init array that will store new NUID
 byte nuidPICC[4];
@@ -36,6 +42,8 @@ void setup() {
   client.setServer(mqtt_server, 1883);
   client.setCallback(callback);
   Serial.println();
+//  pinMode(ledPin, OUTPUT);
+  pinMode(pResistor, INPUT);
   SPI.begin(); // Init SPI bus
   rfid.PCD_Init(); // Init MFRC522
   Serial.println();
@@ -59,7 +67,7 @@ void loop() {
   }
   if (!client.loop())
     client.connect("vanieriot");
-  
+  lightIntensity();
   // Reset the loop if no new card present on the sensor/reader. This saves the entire process when idle.
   if ( ! rfid.PICC_IsNewCardPresent())
     return;
@@ -99,7 +107,41 @@ void loop() {
   rfid.PICC_HaltA();
   // Stop encryption on PCD
   rfid.PCD_StopCrypto1();
+
+
 }
+
+void lightIntensity() {
+  //get value of the light intensity
+  value = analogRead(pResistor);
+//  digitalWrite(ledPin, LOW);
+  Serial.println("Light intensity is: ");
+  Serial.println(value);
+
+//  if (value < 400) {
+//    digitalWrite(ledPin, HIGH);
+////    ledStatus = "ON";
+//    Serial.println("Led Status Activated: ");
+////    Serial.println(ledStatus);
+//  
+//  }
+//
+//   if (value >= 400) {
+////       / ledStatus = "OFF";
+//        Serial.println("Led Status Activated: ");
+//        Serial.println(ledStatus);
+//       
+//   }
+   //publish value
+   char pResistorValue[8];
+   dtostrf(value, 6,2, pResistorValue); 
+    
+   client.publish("esp/lightintensity", pResistorValue);
+   delay(1000);
+//   client.publish("esp/lightswitch", ledStatus);
+}
+
+
 /**
   Helper routine to dump a byte array as hex values to Serial.
 */
@@ -115,17 +157,7 @@ void printHex(byte *buffer, byte bufferSize) {
   client.publish("esp/rfid", (char*) uid.c_str());
 
 }
-/**
-  Helper routine to dump a byte array as dec values to Serial.
-*/
-//void printDec(byte *buffer, byte bufferSize) {
-//  for (byte i = 0; i < bufferSize; i++) {
-//    Serial.print(buffer[i] < 0x10 ? " 0" : " ");
-//    Serial.print(buffer[i], DEC);
-//  }
-//
-//   
-//}
+
 
 void setup_wifi() {
   delay(10);

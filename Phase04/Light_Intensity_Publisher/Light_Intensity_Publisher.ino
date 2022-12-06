@@ -22,8 +22,8 @@ WiFiClient vanieriot;
 PubSubClient client(vanieriot);
 
 // light setup
-const int pResistor = A0;
-const int ledPin = 16; // equivalent D0
+const int pResistor = A1;
+const int ledPin = 5; // equivalent D0
 // Variables
 int value;
 char* ledStatus = "OFF";

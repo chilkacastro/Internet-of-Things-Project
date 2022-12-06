@@ -8,7 +8,6 @@ import dash_daq as daq
 import RPi.GPIO as GPIO
 import base64
 import bluetooth
-from PIL import Image       # use and download PILLOW for it to work  https://pillow.readthedocs.io/en/stable/installation.html
 import time
 from time import sleep
 import Freenove_DHT as DHT
@@ -49,10 +48,10 @@ path_to_picture = 'assets/minion.jpg'
 #------------PHASE03 VARIABLE CODES--------------
 #broker = '192.168.0.158' #ip in Lab class
 # broker = '192.168.76.10'
-#broker = '192.168.1.110' #chilka home
+broker = '192.168.1.110' #chilka home
 #broker = '10.0.0.218'
 #broker = '192.168.208.198'
-broker = "192.168.225.198"
+#broker = "192.168.225.198"
 port = 1883
 topic1 = "esp/lightintensity"
 topic2 = "esp/lightswitch"
@@ -63,11 +62,10 @@ client_id = f'python-mqtt-{random.randint(0, 100)}'
 # password = 'public'
 esp_message = 0
 
-esp_lightswitch_message = "OFF"
+# esp_lightswitch_message = "OFF"
 GPIO.setmode(GPIO.BOARD)
 GPIO.setwarnings(False)
-LedPin = 35 # Led Pin/Enable Pin
-GPIO.setup(LedPin,GPIO.OUT)
+
 email_counter = 0    # just checks if email has been sent at some stage
 # -----------------------------------------------
 
@@ -85,15 +83,15 @@ GPIO.setwarnings(False)
 Motor1 = 35 # Enable Pin
 Motor2 = 37 # Input Pin
 Motor3 = 33 # Input Pin
+LedPin = 38
+GPIO.setup(Motor1, GPIO.IN)
+GPIO.setup(Motor2, GPIO.IN)
+GPIO.setup(Motor3, GPIO.IN)
+GPIO.setup(LedPin, GPIO.OUT)
 
-GPIO.setup(Motor1,GPIO.IN)
-GPIO.setup(Motor2,GPIO.IN)
-GPIO.setup(Motor3,GPIO.IN)
 
 light_bulb_off = 'assets/lightbulbOFF.png'        
 light_bulb_on = 'assets/lightbulbON.png'       
-#fan_on = 'assets/fanON.png'                           new source
-#fan_off = 'assets/fanOFF2.png'                        new source
 url="https://assets5.lottiefiles.com/packages/lf20_UdIDHC.json"
 options = dict(loop=True, autoplay=True, rendererSettings=dict(preserveAspectRatio='xMidYMid slice'))
 url2 = "https://assets8.lottiefiles.com/packages/lf20_ylvmhzmx.json"
@@ -114,8 +112,8 @@ daq_Gauge = daq.Gauge(
 daq_Thermometer = daq.Thermometer(
                         id='my-thermometer-1',
                         min=-40,
-                        value = 18,
                         max=50,
+                        value=18.0,
                         scale={'start': -40, 'interval': 10},
                         label="Temperature",
                         showCurrentValue=True,
@@ -170,25 +168,25 @@ humidity_Interval = dcc.Interval(
 temperature_Interval =  dcc.Interval(
             id = 'temp-update',
             disabled=False,
-            interval = 1*8000,   #lower than 5000 for temperature wouldn't show the temp on the terminal #1800000 equivalent to 30 mins
+            interval = 1*20000,   #lower than 5000 for temperature wouldn't show the temp on the terminal #1800000 equivalent to 30 mins
             n_intervals = 0)
 
 light_Intensity_Interval =  dcc.Interval(
             id = 'light-intensity-update',
             disabled=False,
-            interval = 1*1000,   
+            interval = 1*5000,   
             n_intervals = 0)
 
 led_On_Email_Interval = dcc.Interval(
             id = 'led-email-status-update',
             disabled=False,
-            interval = 1*2000,   
+            interval = 1*5000,   
             n_intervals = 0)
 
 rfid_Interval = dcc.Interval(
             id = 'rfid-code-update',
             disabled=False,
-            interval = 1*8000,   
+            interval = 1*10000,   
             n_intervals = 0)
 
 userinfo_Interval = dcc.Interval(
@@ -254,7 +252,8 @@ card_content1 = dbc.Container(
                     html_bluetooth_Label,
                     html_Bluetooth_Gif,
                     html.H5("Number of Bluetooth Devices: ",
-                            id='bluetooth_heading',style ={"text-align":"center", 'margin-top':'10px'})
+                            id='bluetooth_heading',style ={"text-align":"center", 'margin-top':'10px'}),
+                     html.H5(id='rfid_heading',style ={"text-align":"center", 'margin-top':'10px'})
                 ]),
                 color="secondary", inverse=True, style={"width": "30rem", 'height': "22rem"}), width="auto")],
             justify="center",
@@ -266,7 +265,8 @@ card_content1 = dbc.Container(
 content = html.Div([
            dbc.Row([
                 card_content1,
-                fan_Status_Message_Interval, humidity_Interval, temperature_Interval, light_Intensity_Interval, led_On_Email_Interval, rfid_Interval, userinfo_Interval, bluetooth_Interval, fahrenheit_Interval 
+                humidity_Interval, temperature_Interval, light_Intensity_Interval, led_On_Email_Interval, rfid_Interval,
+                userinfo_Interval, bluetooth_Interval, fahrenheit_Interval, fan_Status_Message_Interval, fan_Interval
              ]),
         ])
 
@@ -278,35 +278,46 @@ app.layout = dbc.Container([
                 ], style={"height": "100vh"}), # outer
             ], fluid=True) #container
 
-# @app.callback(Output('my-gauge-1', 'value'), Input('humid-update', 'n_intervals'))
-# def update_output(value):
-#     dht = DHT.DHT(DHTPin)   #create a DHT class object
-#     while(True):
-#         for i in range(0,15):            
-#             chk = dht.readDHT11()     #read DHT11 and get a return value. Then determine whether data read is normal according to the return value.
-#             if (chk is dht.DHTLIB_OK):      #read DHT11 and get a return value. Then determine whether data read is normal according to the return value.
-#                 break
-#             time.sleep(0.1)
-#         time.sleep(2)
-#         print("Humidity : %.2f \t \n"%(dht.humidity))  # for testing on the terminal
-#         return dht.humidity
-#     
-# @app.callback([Output('my-thermometer-1', 'value')], Input('temp-update', 'n_intervals'))
-# def update_output(value):
-#     dht = DHT.DHT(DHTPin)   #create a DHT class object
-#     while(True):
-#         for i in range(0,15):            
-#             chk = dht.readDHT11()     #read DHT11 and get a return value. Then determine whether data read is normal according to the return value.
-#             if (chk is dht.DHTLIB_OK):      #read DHT11 and get a return value. Then determine whether data read is normal according to the return value.
-#                 break
-#             time.sleep(0.1)
-#         time.sleep(2)
-#         temperature = dht.temperature
-#         print("Temperature : %.2f \n"%(dht.temperature))
-#         if (dht.temperature >= 24):
-#             sendEmail()
-#           
-#         return dht.temperature
+@app.callback(Output('my-gauge-1', 'value'), Input('humid-update', 'n_intervals'))
+def update_output(value):
+    dht = DHT.DHT(DHTPin)   #create a DHT class object
+    while(True):
+        for i in range(0,15):            
+            chk = dht.readDHT11()     #read DHT11 and get a return value. Then determine whether data read is normal according to the return value.
+            if (chk is dht.DHTLIB_OK):      #read DHT11 and get a return value. Then determine whether data read is normal according to the return value.
+                break
+            time.sleep(0.1)
+        time.sleep(2)
+        print("Humidity : %.2f \t \n"%(dht.humidity))  # for testing on the terminal
+        return dht.humidity
+    
+@app.callback(
+    [Output('my-thermometer-1', 'value'),
+     Output('my-thermometer-1', 'min'),
+     Output('my-thermometer-1', 'max'),
+     Output('my-thermometer-1', 'scale'),
+     Output('my-thermometer-1', 'units')],
+    [Input('fahrenheit-switch', 'value'),
+    Input('my-thermometer-1', 'value'),
+    Input('temp-update', 'n_intervals')])
+def update_output(switch_state, temp_value, interval_value):
+    dht = DHT.DHT(DHTPin)   #create a DHT class object
+    while(True):
+        for i in range(0,15):            
+            chk = dht.readDHT11()     #read DHT11 and get a return value. Then determine whether data read is normal according to the return value.
+            if (chk is dht.DHTLIB_OK):      #read DHT11 and get a return value. Then determine whether data read is normal according to the return value.
+                break
+            time.sleep(0.1)
+        time.sleep(2)
+        temperature = dht.temperature
+        print("Temperature : %.2f \n"%(dht.temperature))
+        if (dht.temperature >= temp_threshold):
+            sendEmail()
+            
+        if switch_state:
+           return (temperature * 1.8) + 32, 40, 120, {'start': 40, 'interval': 10}, 'F'
+        else:
+            return temperature, -40, 50, {'start': -40, 'interval': 10}, 'C'
 
 def sendEmail():
         port = 587  # For starttls
@@ -332,13 +343,13 @@ def is_fan_on():
     else:
         return False
 
-@app.callback(Output('my-fan-1', 'value'), Input('fan-update', 'n_intervals'))
-def update_output(value):
-    fan_status_checker = is_fan_on()
-#     print(fan_status_checker)
-    return True if fan_status_checker else False
-        # return True if GPIO.input(Motor1) and not GPIO.input(Motor2) and GPIO.input(Motor3) else False
-
+# @app.callback(Output('my-fan-1', 'value'), Input('fan-update', 'n_intervals'))
+# def update_output(value):
+#     fan_status_checker = is_fan_on()
+# #     print(fan_status_checker)
+#     return True if fan_status_checker else False
+#         # return True if GPIO.input(Motor1) and not GPIO.input(Motor2) and GPIO.input(Motor3) else False
+# 
 @app.callback([Output('fan_status_message', 'children'), Output('lottie-gif', 'isStopped')],
               Input('fan_status_message_update', 'n_intervals'))
 def update_h1(n):
@@ -359,22 +370,8 @@ def update_h1(n):
 def update_user_information(n):
     return "Username: " + str(user_id) , "Temperature: " +  str(temp_threshold), "Light Intensity: " + str(light_threshold), path_to_picture
     
-@app.callback(
-    [Output('my-thermometer-1', 'value'),
-     Output('my-thermometer-1', 'min'),
-     Output('my-thermometer-1', 'max'),
-     Output('my-thermometer-1', 'scale'),
-     Output('my-thermometer-1', 'units')],
-    [Input('fahrenheit-switch', 'value'),
-    Input('my-thermometer-1', 'value'),
-    Input('fahrenheit-update', 'n_clicks')]
-)
-def update_output(switch_state, temp_value, n_clicks):
-    if switch_state:
-        return (18 * 1.8) + 32, 40, 120, {'start': 40, 'interval': 10}, 'F'  #replace 18 with temperature later
-    else:
-        return 18, -40, 50, {'start': -40, 'interval': 10}, 'C'
-    
+
+#     
 #CONVERSION NOT YET DONE
 # @app.callback([Output('my-thermometer-1', 'value')] ,
 #               [Input('temp-update', 'n_intervals'),
@@ -427,9 +424,8 @@ def sendUserEnteredEmail(user_name):
 @app.callback(Output('light-intensity', 'value'), Input('light-intensity-update', 'n_intervals'))  
 def update_output(value):
     run()
-    # print("Here: ", esp_message) UNCOMMENT TO SEE THE VALUE PASSED FROM THE PUBLISHER 
-    value = esp_message
-    return value
+    print("Here is light intensity: ", esp_message) #UNCOMMENT TO SEE THE VALUE PASSED FROM THE PUBLISHER 
+    return esp_message
 
 def connect_mqtt() -> mqtt_client:
     def on_connect(client, userdata, flags, rc):
@@ -449,11 +445,11 @@ def on_message_from_lightintensity(client, userdata, message):
    print("Message Received from LightSwtch: ")
    print(esp_message)
 
-def on_message_from_lightswitch(client, userdata, message):
-   global esp_lightswitch_message
-   esp_lightswitch_message = message.payload.decode()
-   print("Message Received from lightswitch: ")
-   print(esp_lightswitch_message)
+# def on_message_from_lightswitch(client, userdata, message):
+#    global esp_lightswitch_message
+#    esp_lightswitch_message = message.payload.decode()
+#    print("Message Received from lightswitch: ")
+#    print(esp_lightswitch_message)
 
 def on_message_from_rfid(client, userdata, message):
    global esp_rfid_message
@@ -491,7 +487,7 @@ def get_from_database(rfid):
         light_threshold = user_info['light_threshold']
         global path_to_picture
         path_to_picture = user_info['picture']
-        sendUserEnteredEmail(str(user_id))
+        sendUserEnteredEmail(rfid)
     print(str(user_id) + " " + str(temp_threshold) + " " + str(light_threshold) + " " + path_to_picture)
     
 def run():
@@ -500,7 +496,7 @@ def run():
     client.subscribe(topic2, qos=1)
     client.subscribe(topic3, qos=1)
     client.message_callback_add(topic1, on_message_from_lightintensity)
-    client.message_callback_add(topic2, on_message_from_lightswitch)
+#     client.message_callback_add(topic2, on_message_from_lightswitch)
     client.message_callback_add(topic3, on_message_from_rfid)
     client.loop_start()
     
@@ -516,25 +512,26 @@ def send_led_email_check(value):         # send email and increase the email cou
 @app.callback([Output('email_heading', 'children'), Output('light-bulb', 'src')], Input('led-email-status-update', 'n_intervals'))       # update email sent message
 def update_email_status(value):
     lightvalue = esp_message
-    value = esp_lightswitch_message
     send_led_email_check(value)
     print(email_counter)
-    if email_counter > 0 and value.__eq__("ON") and lightvalue < 400:
+    
+    if email_counter > 0 and lightvalue < light_threshold:
+        GPIO.output(LedPin, GPIO.HIGH)
         return "Email has been sent. Lightbulb is ON", light_bulb_on
-    elif email_counter > 0 and lightvalue > 400 and value.__eq__("OFF"):
+    elif email_counter > 0 and lightvalue > light_threshold:
         print(lightvalue)
         print(value)
+        GPIO.output(LedPin, GPIO.LOW)
         return "Email has been sent. Lightbulb is OFF", light_bulb_off
     else:
+        GPIO.output(LedPin, GPIO.LOW)
         return "No email has been sent. Lightbulb is OFF", light_bulb_off
-
-            
+   
 @app.callback(Output('rfid_heading', 'children'), Input('rfid-code-update', 'n_intervals'))  
 def update_output(value):
     run()
     value = esp_rfid_message
-    sendUserEnteredEmail(esp_rfid_message)
-    #get_from_database(esp_rfid)
+    get_from_database(esp_rfid_message)
     return value
 
 @app.callback(Output('bluetooth_heading', 'children'), Input('bluetooth-update', 'n_intervals'))
@@ -547,6 +544,6 @@ def scanNumberOfBluetoothDevices():
         
 
 if __name__ == '__main__':
-   # app.run_server(debug=True)
-    app.run_server(debug=False,dev_tools_ui=False,dev_tools_props_check=False)
+   app.run_server(debug=True)
+#     app.run_server(debug=False,dev_tools_ui=False,dev_tools_props_check=False)
 

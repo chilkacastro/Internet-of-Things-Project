@@ -542,9 +542,6 @@ def update_output(value):
 def update_bluetooth(value):
     return "Number of Bluetooth devices: " + str(scanNumberOfBluetoothDevices())
 
-def enableBluetooth():
-    os.system("bluetooth scan on")
-
 def scanNumberOfBluetoothDevices():
     number_of_devices = 0
     output = subprocess.check_output(['bluetoothctl', 'devices'])

@@ -40,10 +40,11 @@ navbar = dbc.NavbarSimple(
 )
 
 #------------thresholds and user info-----
-esp_rfid_message = "RFID"
-user_id = "999NINENINE"
-temp_threshold = 0.0
-light_threshold = 0.0
+esp_rfid_message = "RFID FROM MQTT"
+user_id = "Default"
+temp_threshold = 25.0
+light_threshold = 0
+humidity = 40
 path_to_picture = 'assets/minion.jpg'
 
 #------------PHASE03 VARIABLE CODES--------------
@@ -59,10 +60,9 @@ topic2 = "esp/lightswitch"
 topic3 = "esp/rfid"
 # generate client ID with pub prefix randomly
 client_id = f'python-mqtt-{random.randint(0, 100)}'
-# username = 'emqx'
-# password = 'public'
-esp_message = 0
 
+esp_message = 0
+# send_user_email_counter = 0
 # esp_lightswitch_message = "OFF"
 GPIO.setmode(GPIO.BOARD)
 GPIO.setwarnings(False)
@@ -90,7 +90,6 @@ GPIO.setup(Motor2, GPIO.IN)
 GPIO.setup(Motor3, GPIO.IN)
 GPIO.setup(LedPin, GPIO.OUT)
 
-
 light_bulb_off = 'assets/lightbulbOFF.png'        
 light_bulb_on = 'assets/lightbulbON.png'       
 url="https://assets5.lottiefiles.com/packages/lf20_UdIDHC.json"
@@ -104,7 +103,6 @@ daq_Gauge = daq.Gauge(
                 id='my-gauge-1',
                 label="Humidity",
                 showCurrentValue=True,
-                value = 62,
                 size=200,
                 max=100,
                 min=0)
@@ -114,7 +112,6 @@ daq_Thermometer = daq.Thermometer(
                         id='my-thermometer-1',
                         min=-40,
                         max=50,
-                        value=18.0,
                         scale={'start': -40, 'interval': 10},
                         label="Temperature",
                         showCurrentValue=True,
@@ -125,8 +122,7 @@ daq_Fahrenheit_ToggleSwitch = daq.ToggleSwitch(
         id='fahrenheit-switch',
         label='Fahrenheit',
         labelPosition='bottom',
-        value=False
-    )
+        value=False)
 
 # all fan related html
 html_Fan_Label = html.H6('Fan',style={'text-align':'center'})
@@ -150,20 +146,19 @@ html_Led_Status_Message = html.H1(id='light_h1',style={'text-align':'center'})  
 fan_Status_Message_Interval = dcc.Interval(
             id='fan_status_message_update',
             disabled=False,
-            interval=5*1000, # 10 seconds
+            interval=1 * 3000,
             n_intervals=0)
-            # max_intervals=-1, # -1 goes on forever no max
             
 fan_Interval = dcc.Interval(
             id = 'fan-update',
             disabled=False,
-            interval = 1*8000,  
+            interval = 1 * 8000,  
             n_intervals = 0)
             
 humidity_Interval = dcc.Interval(
             id = 'humid-update',
             disabled=False,
-            interval = 1*3000,  #lower than 3000 for humidity wouldn't show the humidity on the terminal
+            interval = 1 * 3000,
             n_intervals = 0)
 
 temperature_Interval =  dcc.Interval(
@@ -214,7 +209,7 @@ sidebar = html.Div([
             html.Img(src=path_to_picture, id="picture_path", style={'border-radius': '80px', 'width':'140px', 'height':'140px', 'object-fit': 'cover', 'display': 'block','margin-left':'auto','margin-right': 'auto'}),
             html.H6("Username:" + str(user_id), style={'margin-top':'30px'}, id="username_user_data"),
             html.H4("Favorites ", style={'margin-top':'40px'}),
-           # html.H6("Humidity: ", style={'margin-left':'15px'}, id="humidity_user_data"),
+            html.H6("Humidity: " + str(humidity), style={'margin-left':'15px'}, id="humidity_user_data"),
             html.H6("Temperature: " + str(temp_threshold), style={'margin-left':'15px'}, id="temperature_user_data"),
             html.H6("Light Intensity: " + str(light_threshold), style={'margin-left':'15px'}, id="lightintensity_user_data")
             ])
@@ -323,11 +318,11 @@ def update_output(switch_state, temp_value, interval_value):
 def sendEmail():
         port = 587  # For starttls
         smtp_server = "smtp-mail.outlook.com"
-        sender_email = "iotdashboard2022@outlook.com"
-        receiver_email = "iotdashboard2022@outlook.com"
+        sender_email = "iotdashboardother2022@outlook.com"
+        receiver_email = "iotdashboardother2022@outlook.com"
         password = 'iotpassword123'
         subject = "Subject: FAN CONTROL" 
-        body = "Your home temperature is greater than 24. Do you wish to turn on the fan. Reply YES if so."
+        body = "Your home temperature is greater than your desired threshold. Do you wish to turn on the fan. Reply YES if so."
         message = subject + '\n\n' + body
         context = ssl.create_default_context()
         with smtplib.SMTP(smtp_server, port) as server:
@@ -344,13 +339,6 @@ def is_fan_on():
     else:
         return False
 
-# @app.callback(Output('my-fan-1', 'value'), Input('fan-update', 'n_intervals'))
-# def update_output(value):
-#     fan_status_checker = is_fan_on()
-# #     print(fan_status_checker)
-#     return True if fan_status_checker else False
-#         # return True if GPIO.input(Motor1) and not GPIO.input(Motor2) and GPIO.input(Motor3) else False
-# 
 @app.callback([Output('fan_status_message', 'children'), Output('lottie-gif', 'isStopped')],
               Input('fan_status_message_update', 'n_intervals'))
 def update_h1(n):
@@ -363,30 +351,22 @@ def update_h1(n):
         return "Status: Off", True
     
 @app.callback([Output('username_user_data', 'children'),
-#                Output('humidity_user_data', 'children'),
+               Output('humidity_user_data', 'children'),
                Output('temperature_user_data', 'children'),
                Output('lightintensity_user_data', 'children'),
                Output('picture_path', 'src')],
                Input('userinfo-update', 'n_intervals'))
 def update_user_information(n):
-    return "Username: " + str(user_id) , "Temperature: " +  str(temp_threshold), "Light Intensity: " + str(light_threshold), path_to_picture
+    return "Username: " + str(user_id) ,"Humidity: 40" ,"Temperature: " +  str(temp_threshold), "Light Intensity: " + str(light_threshold), path_to_picture
     
-
-#     
-#CONVERSION NOT YET DONE
-# @app.callback([Output('my-thermometer-1', 'value')] ,
-#               [Input('temp-update', 'n_intervals'),
-#               Input('fahrenheit-button', 'n_clicks')])
-# def changeToFahrenheit(n_intervals, n_clicks): 
-#     return (temperature * 1.8) + 32
 
 # PHASE 03 CODE FOR SUBSCRIBE 
 def sendLedStatusEmail():
          print("PASSED BY SENDLEDSTATUSEMAIL method")
          port = 587  # For starttls
          smtp_server = "smtp-mail.outlook.com"
-         sender_email = "iotdashboard2022@outlook.com"
-         receiver_email = "iotdashboard2022@outlook.com"
+         sender_email = "iotdashboardother2022@outlook.com"
+         receiver_email = "iotdashboardother2022@outlook.com"
          password = 'iotpassword123'
          subject = "Subject: LIGHT NOTIFICATION" 
          current_time = datetime.now()
@@ -405,8 +385,8 @@ def sendLedStatusEmail():
 def sendUserEnteredEmail(user_name):
         port = 587  # For starttls
         smtp_server = "smtp-mail.outlook.com"
-        sender_email = "iotdashboard2022@outlook.com"
-        receiver_email = "iotdashboard2022@outlook.com"
+        sender_email = "iotdashboardother2022@outlook.com"
+        receiver_email = "iotdashboardother2022@outlook.com"
         password = 'iotpassword123'
         subject = "Subject: USER ENTERED" 
         current_time = datetime.now()
@@ -424,8 +404,8 @@ def sendUserEnteredEmail(user_name):
             
 @app.callback(Output('light-intensity', 'value'), Input('light-intensity-update', 'n_intervals'))  
 def update_output(value):
-    run()
-    print("Here is light intensity: ", esp_message) #UNCOMMENT TO SEE THE VALUE PASSED FROM THE PUBLISHER 
+#     run()
+    print("Here is light intensity: ", esp_message) 
     return esp_message
 
 def connect_mqtt() -> mqtt_client:
@@ -443,8 +423,8 @@ def connect_mqtt() -> mqtt_client:
 def on_message_from_lightintensity(client, userdata, message):
    global esp_message
    esp_message = int(float(message.payload.decode()))
-   print("Message Received from LightSwtch: ")
-   print(esp_message)
+#    print("Message Received from Photoresistor: ")
+#    print(esp_message)
 
 # def on_message_from_lightswitch(client, userdata, message):
 #    global esp_lightswitch_message
@@ -454,10 +434,13 @@ def on_message_from_lightintensity(client, userdata, message):
 
 def on_message_from_rfid(client, userdata, message):
    global esp_rfid_message
+#    global send_user_email_counter
+#    send_user_email_counter = 0
    esp_rfid_message = message.payload.decode()
    print("Message Received from rfid: ")
    print(esp_rfid_message)
    get_from_database(esp_rfid_message)
+   sendUserEnteredEmail(esp_rfid_message)
 
 def on_message(client, userdata, message):
    print("Message Received from Others: "+message.payload.decode())
@@ -488,40 +471,35 @@ def get_from_database(rfid):
         light_threshold = user_info['light_threshold']
         global path_to_picture
         path_to_picture = user_info['picture']
-        sendUserEnteredEmail(rfid)
+        
     print(str(user_id) + " " + str(temp_threshold) + " " + str(light_threshold) + " " + path_to_picture)
     
 def run():
     client = connect_mqtt()
     client.subscribe(topic1, qos=1)
-    client.subscribe(topic2, qos=1)
+#     client.subscribe(topic2, qos=1)
     client.subscribe(topic3, qos=1)
     client.message_callback_add(topic1, on_message_from_lightintensity)
 #     client.message_callback_add(topic2, on_message_from_lightswitch)
     client.message_callback_add(topic3, on_message_from_rfid)
     client.loop_start()
     
-# run()
-def send_led_email_check(value):         # send email and increase the email counter to know there is an email sent
+def send_led_email_check(lightvalue):         # send email and increase the email counter to know there is an email sent
       global email_counter
-      if value.__eq__("ON") and email_counter == 0:
-         print("passed here 2")
+      if lightvalue < light_threshold and email_counter == 0:
+         print("passed here in send_led_email_check")
          sendLedStatusEmail()
          email_counter += 1
 
-#printing
 @app.callback([Output('email_heading', 'children'), Output('light-bulb', 'src')], Input('led-email-status-update', 'n_intervals'))       # update email sent message
 def update_email_status(value):
     lightvalue = esp_message
-    send_led_email_check(value)
-    print(email_counter)
+    send_led_email_check(lightvalue)
     
     if email_counter > 0 and lightvalue < light_threshold:
         GPIO.output(LedPin, GPIO.HIGH)
         return "Email has been sent. Lightbulb is ON", light_bulb_on
     elif email_counter > 0 and lightvalue > light_threshold:
-        print(lightvalue)
-        print(value)
         GPIO.output(LedPin, GPIO.LOW)
         return "Email has been sent. Lightbulb is OFF", light_bulb_off
     else:
@@ -530,10 +508,11 @@ def update_email_status(value):
    
 @app.callback(Output('rfid_heading', 'children'), Input('rfid-code-update', 'n_intervals'))  
 def update_output(value):
-    run()
-    value = esp_rfid_message
-    get_from_database(esp_rfid_message)
-    return value
+    #run()
+#     if (send_user_email_counter == 0):
+#         sendUserEnteredEmail(esp_rfid_message)
+#         send_user_email_counter += 1
+    return "RFID FROM MQTT: " + esp_rfid_message
 
 @app.callback(Output('bluetooth_heading', 'children'), Input('bluetooth-update', 'n_intervals'))
 def update_bluetooth(value):
@@ -548,7 +527,7 @@ def scanNumberOfBluetoothDevices():
     
     return number_of_devices
         
-
+run()
 if __name__ == '__main__':
    app.run_server(debug=True)
 #     app.run_server(debug=False,dev_tools_ui=False,dev_tools_props_check=False)

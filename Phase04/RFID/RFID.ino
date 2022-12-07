@@ -118,26 +118,11 @@ void lightIntensity() {
   Serial.println("Light intensity is: ");
   Serial.println(value);
 
-//  if (value < 400) {
-//    digitalWrite(ledPin, HIGH);
-////    ledStatus = "ON";
-//    Serial.println("Led Status Activated: ");
-////    Serial.println(ledStatus);
-//  
-//  }
-//
-//   if (value >= 400) {
-////       / ledStatus = "OFF";
-//        Serial.println("Led Status Activated: ");
-//        Serial.println(ledStatus);
-//       
-//   }
    //publish value
    char pResistorValue[8];
    dtostrf(value, 6,2, pResistorValue); 
     
    client.publish("esp/lightintensity", pResistorValue);
-   delay(1000);
 //   client.publish("esp/lightswitch", ledStatus);
 }
 

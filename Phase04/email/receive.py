@@ -18,7 +18,7 @@ Motor3 = 33 # Input Pin
 GPIO.setup(Motor1,GPIO.OUT)
 GPIO.output(Motor1,GPIO.LOW)
 
-EMAIL = 'iotdashboard2022@outlook.com'
+EMAIL = 'iotdashboardother2022@outlook.com'
 PASSWORD = 'iotpassword123'
 
 SERVER = 'outlook.office365.com'
@@ -46,7 +46,7 @@ while True:
     mail.login(EMAIL, PASSWORD)
     mail.select('inbox')
     #SUBJECT is set to fan control so it detects that its a reply probably
-    status, data = mail.search(None,'(FROM "iotdashboard2022@outlook.com" SUBJECT "FAN CONTROL" UNSEEN)')
+    status, data = mail.search(None,'(FROM "iotdashboardother2022@outlook.com" SUBJECT "FAN CONTROL" UNSEEN)')
     #status, data = mail.search(None,'(SUBJECT "FAN CONTROL" UNSEEN)')
 
     #most of this is useless stuff, check the comments 
@@ -86,7 +86,7 @@ while True:
                                 activateFan()
                             if replylist[0] == "NO":
                                 #status, data = mail.fetch(i, '(RFC822)')
-                                status, data = mail.search(None,'(FROM "iotdashboard2022@outlook.com" SUBJECT "FAN CONTROL" UNSEEN)')
+                                status, data = mail.search(None,'(FROM "iotdashboardother2022@outlook.com" SUBJECT "FAN CONTROL" UNSEEN)')
                                 for num in data[0].split():
                                     mail.store(num, '+FLAGS', '\\Deleted')
                                 mail.expunge()

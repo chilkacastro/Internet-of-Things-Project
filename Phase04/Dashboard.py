@@ -40,13 +40,13 @@ navbar = dbc.NavbarSimple(
 )
 
 #------------thresholds and user info-----
-esp_rfid_message = "RFID FROM MQTT"
+esp_rfid_message = "000000"
 user_id = "Default"
 temp_threshold = 25.0
 light_threshold = 0
 humidity = 40
 path_to_picture = 'assets/minion.jpg'
-
+temp_email_sent = False
 #------------PHASE03 VARIABLE CODES--------------
 #broker = '192.168.0.158' #ip in Lab class
 # broker = '192.168.76.10'
@@ -73,7 +73,6 @@ email_counter = 0    # just checks if email has been sent at some stage
 #------------PHASE02 VARIABLE CODES--------------
 EMAIL = 'iotdashboard2022@outlook.com'
 PASSWORD = 'iotpassword123'
-
 SERVER = 'outlook.office365.com'
 temperature = 0
 DHTPin = 40 # equivalent to GPIO21
@@ -120,8 +119,6 @@ daq_Thermometer = daq.Thermometer(
                         color="red")
 daq_Fahrenheit_ToggleSwitch = daq.ToggleSwitch(
         id='fahrenheit-switch',
-        label='Fahrenheit',
-        labelPosition='bottom',
         value=False)
 
 # all fan related html
@@ -134,6 +131,9 @@ html_Fan_Status_Message = html.H5(id='fan_status_message',style={'text-align':'c
 # all related to light intensity and led
 html_Light_Intensity_Label =  html.H6('Light Intensity',style={'text-align':'center'})
 html_bluetooth_Label =  html.H6('Bluetooth Devices',style={'text-align':'center'})
+html_Celcius_Label =  html.H6('Celcius',style={'text-align':'center'})
+html_Fahrenheit_Label =  html.H6('Fahrenheit',style={'text-align':'center'})
+
 daq_Led_Light_Intensity_LEDDisplay = daq.LEDDisplay(
                                         id='light-intensity',
                                         label="Light Intensity Value",
@@ -179,11 +179,11 @@ led_On_Email_Interval = dcc.Interval(
             interval = 1*5000,   
             n_intervals = 0)
 
-rfid_Interval = dcc.Interval(
-            id = 'rfid-code-update',
-            disabled=False,
-            interval = 1*10000,   
-            n_intervals = 0)
+# rfid_Interval = dcc.Interval(
+#             id = 'rfid-code-update',
+#             disabled=False,
+#             interval = 1*15000,   
+#             n_intervals = 0)
 
 userinfo_Interval = dcc.Interval(
             id = 'userinfo-update',
@@ -229,7 +229,8 @@ card_content1 = dbc.Container(
         ),
         dbc.Row([
             dbc.Col(dbc.Card(dbc.Col(daq_Gauge), color="secondary", inverse=True, style={"width": "30rem", 'height': "22rem"}), width="auto"),
-            dbc.Col(dbc.Card(dbc.Col(html.Div([daq_Thermometer, daq_Fahrenheit_ToggleSwitch])), color="secondary", inverse=True, style={"width": "30rem", 'height': "22rem"}), width="auto"),
+            dbc.Col(dbc.Card(dbc.Col(html.Div([daq_Thermometer,
+                                               dbc.Row([dbc.Col(html_Celcius_Label), dbc.Col(daq_Fahrenheit_ToggleSwitch), dbc.Col(html_Fahrenheit_Label)]) ])), color="secondary", inverse=True, style={"width": "30rem", 'height': "22rem"}), width="auto"),
             dbc.Col(dbc.Card(dbc.Col(html.Div([fan_Label, html_Div_Fan_Gif, html_Fan_Status_Message])), color="secondary", inverse=True, style={"width": "30rem", 'height': "22rem"}), width="auto")],
             justify="center",
         ),
@@ -247,9 +248,8 @@ card_content1 = dbc.Container(
                 html.Div([
                     html_bluetooth_Label,
                     html_Bluetooth_Gif,
-                    html.H5("Number of Bluetooth Devices: ",
-                            id='bluetooth_heading',style ={"text-align":"center", 'margin-top':'10px'}),
-                     html.H5(id='rfid_heading',style ={"text-align":"center", 'margin-top':'10px'})
+                    html.H5("Number of Bluetooth Devices: ", id='bluetooth_heading',style ={"text-align":"center", 'margin-top':'10px'}),
+#                      html.H5(id='rfid_heading',style ={"text-align":"center", 'margin-top':'10px'})
                 ]),
                 color="secondary", inverse=True, style={"width": "30rem", 'height': "22rem"}), width="auto")],
             justify="center",
@@ -261,7 +261,7 @@ card_content1 = dbc.Container(
 content = html.Div([
            dbc.Row([
                 card_content1,
-                humidity_Interval, temperature_Interval, light_Intensity_Interval, led_On_Email_Interval, rfid_Interval,
+                humidity_Interval, temperature_Interval, light_Intensity_Interval, led_On_Email_Interval,
                 userinfo_Interval, bluetooth_Interval, fahrenheit_Interval, fan_Status_Message_Interval, fan_Interval
              ]),
         ])
@@ -307,9 +307,11 @@ def update_output(switch_state, temp_value, interval_value):
         time.sleep(2)
         temperature = dht.temperature
         print("Temperature : %.2f \n"%(dht.temperature))
-        if (dht.temperature >= temp_threshold):
+        global temp_email_sent
+        if dht.temperature >= temp_threshold and temp_email_sent == False:
             sendEmail()
-            
+            temp_email_sent = True
+             
         if switch_state:
            return (temperature * 1.8) + 32, 40, 120, {'start': 40, 'interval': 10}, 'F'
         else:
@@ -461,8 +463,13 @@ def get_from_database(rfid):
         cursor.execute(sql, (rfid))
         user_info = cursor.fetchone()
     print("Result from database select: ")
+    
     print(user_info)
     if(user_info):
+        global email_counter 
+        global temp_email_sent
+        temp_email_sent = False
+        email_counter = 0
         global user_id
         user_id = user_info['id']
         global temp_threshold
@@ -506,13 +513,13 @@ def update_email_status(value):
         GPIO.output(LedPin, GPIO.LOW)
         return "No email has been sent. Lightbulb is OFF", light_bulb_off
    
-@app.callback(Output('rfid_heading', 'children'), Input('rfid-code-update', 'n_intervals'))  
-def update_output(value):
-    #run()
+# @app.callback(Output('rfid_heading', 'children'), Input('rfid-code-update', 'n_intervals'))  
+# def update_output(value):
+#     #run()
 #     if (send_user_email_counter == 0):
 #         sendUserEnteredEmail(esp_rfid_message)
 #         send_user_email_counter += 1
-    return "RFID FROM MQTT: " + esp_rfid_message
+#     return "RFID FROM MQTT: " + esp_rfid_message
 
 @app.callback(Output('bluetooth_heading', 'children'), Input('bluetooth-update', 'n_intervals'))
 def update_bluetooth(value):
@@ -529,6 +536,6 @@ def scanNumberOfBluetoothDevices():
         
 run()
 if __name__ == '__main__':
-   app.run_server(debug=True)
-#     app.run_server(debug=False,dev_tools_ui=False,dev_tools_props_check=False)
+   #app.run_server(debug=True)
+    app.run_server(debug=False,dev_tools_ui=False,dev_tools_props_check=False)
 

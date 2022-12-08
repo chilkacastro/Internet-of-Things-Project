@@ -29,7 +29,7 @@ GPIO.setup(Motor3,GPIO.IN)
 
 url="https://assets5.lottiefiles.com/packages/lf20_UdIDHC.json"
 options = dict(loop=True, autoplay=True, rendererSettings=dict(preserveAspectRatio='xMidYMid slice'))
-app = Dash(external_stylesheets=[dbc.themes.SKETCHY])
+app = Dash(external_stylesheets=[dbc.themes.SOLAR])
 nav_menu= dbc.NavbarSimple(
     brand="PHASE02",
     color="secondary",
@@ -43,6 +43,7 @@ app.layout = html.Div([nav_menu,
                 label="Humidity",
                 showCurrentValue=True,
                 max=100,
+                value=44,
                 min=0)
             , width=4),
         
@@ -56,6 +57,7 @@ app.layout = html.Div([nav_menu,
                     scale={'start': -40, 'interval': 25},
                     label="Temperature(Celsius)",
                     showCurrentValue=True,
+                    value=25,
                     units="C",
                     color="red"),
                     html.Button('Fahrenheit', id='fahrenheit-button', n_clicks=0)
@@ -66,7 +68,7 @@ app.layout = html.Div([nav_menu,
                 dbc.Row(
                     [
                     html.H1('Fan',style={'text-align':'center'}),
-                    html.Div([de.Lottie(options=options, width="25%", height="25%", url=url)], id='my-gif', style={'display':'none'}),
+                    html.Div([de.Lottie(options=options, width="25%", height="25%", url=url)], id='my-gif', style={'display':'block'}),
                     html.H1(id='my_h1',style={'text-align':'center'})
                     ]
                 )

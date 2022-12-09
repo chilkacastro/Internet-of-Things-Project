@@ -50,13 +50,14 @@ temp_email_sent = False
 #------------PHASE03 VARIABLE CODES--------------
 #broker = '192.168.0.158' #ip in Lab class
 # broker = '192.168.76.10'
-broker = '192.168.1.110' #chilka home
+#broker = '192.168.1.110' #chilka home
+broker = "192.168.172.198"
 #broker = '10.0.0.218'
 #broker = '192.168.208.198'
 #broker = "192.168.225.198"
 port = 1883
 topic1 = "esp/lightintensity"
-topic2 = "esp/lightswitch"
+# topic2 = "esp/lightswitch"
 topic3 = "esp/rfid"
 # generate client ID with pub prefix randomly
 client_id = f'python-mqtt-{random.randint(0, 100)}'
@@ -102,7 +103,7 @@ daq_Gauge = daq.Gauge(
                 id='my-gauge-1',
                 label="Humidity",
                 showCurrentValue=True,
-                size=200,
+                size=250,
                 max=100,
                 min=0)
 
@@ -110,7 +111,7 @@ daq_Gauge = daq.Gauge(
 daq_Thermometer = daq.Thermometer(
                         id='my-thermometer-1',
                         min=-40,
-                        max=50,
+                        max=60,
                         scale={'start': -40, 'interval': 10},
                         label="Temperature",
                         showCurrentValue=True,
@@ -315,7 +316,7 @@ def update_output(switch_state, temp_value, interval_value):
         if switch_state:
            return (temperature * 1.8) + 32, 40, 120, {'start': 40, 'interval': 10}, 'F'
         else:
-            return temperature, -40, 50, {'start': -40, 'interval': 10}, 'C'
+            return temperature, -40, 60, {'start': -40, 'interval': 10}, 'C'
 
 def sendEmail():
         port = 587  # For starttls

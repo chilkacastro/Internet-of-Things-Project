@@ -2,9 +2,13 @@
 #include <PubSubClient.h>
 
 //SET THIS THREE VALUES IF TESTING THE CODE
-const char* ssid = "TP-Link_2AD8";
-const char* password = "14730078";
-const char* mqtt_server = "192.168.0.158";
+//const char* ssid = "TP-Link_2AD8";
+//const char* password = "14730078";
+//const char* mqtt_server = "192.168.0.158";
+const char* ssid = "Samad-Mobile";
+const char* password = "12356789";
+const char* mqtt_server = "192.168.172.198";
+
 
 // Chilka: I'm testing this at home so just change this three lines if you want to test it too
 //const char* ssid = "EBOX-9994";

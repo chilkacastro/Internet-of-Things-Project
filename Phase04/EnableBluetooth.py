@@ -1,2 +1,6 @@
 import os
-os.system("bluetoothctl scan on")
+import time
+
+while(True):
+    os.system("bluetoothctl scan on")
+    time.sleep(250)
